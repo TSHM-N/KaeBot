@@ -1,0 +1,20 @@
+# Alpha milestones:
+# TODO: Add playlist support for 'kae play'
+# TODO: Rework some voice commands to require DJ role
+# TODO: Implement voice queue system
+# TODO: Add vital voice commands (commands left to do: skip, resume, pause, queue, now playing, remove, volume)
+# TODO: Implement purge, prune, masskick and massban
+# TODO: Fix any other major bugs (obviously)
+# Beta milestones
+# TODO: Implement 'seek', 'playskip' for additional voice control
+# TODO: Replace some plaintext responses with fancier responses and/or embeds
+# TODO: Make the bot more verbose when an error has occured (and in general)
+# TODO: Cram as many commands as I can into this thing
+# TODO: Add SoundCloud support for audio streams
+# TODO: Optimise voice stream to balance quality and audio stability
+# TODO: Get rid of the god-awful restarthax python file and integrate another solution to restart the bot.
+# TODO: Fix issue where bot does not respond to voice commands after disconnecting from another voice channel while connected to more than one voice channel (Possibly fixed!)
+# TODO: Stop bot from freaking out and gaining sentience when killed/restarted without disconnecting from voice channel
+# TODO: Figure out why the bot lags so much when finding a song to play, fix that if I can (hint: probably pafy and beautifulsoup)
+# TODO: Create a better looking help command
+# TODO: Refactor voice summon code to use ctx.author.channel.id instead of iterating through guild voice channels

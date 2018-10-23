@@ -14,24 +14,6 @@ import youtube_dl
 import pafy
 
 # Made by TSHMN
-# Alpha milestones:
-# TODO: Add playlist support for 'kae play'
-# TODO: Rework some voice commands to require DJ role
-# TODO: Implement voice queue system (big work!)
-# TODO: Add vital voice commands (commands left to do: skip, resume, pause, queue, now playing, remove, volume)
-# TODO: Implement purge, prune, masskick and massban
-# Beta milestones
-# TODO: Implement 'seek', 'playskip' for additional voice control
-# TODO: Replace some plaintext responses with fancier responses and/or embeds
-# TODO: Make the bot more verbose when an error has occured
-# TODO: Cram as many commands as I can into this thing
-# TODO: Add SoundCloud support for audio streams
-# TODO: Fix issue where bot does not respond to voice commands after disconnecting from another voice channel while connected to more than one voice channel (Possibly fixed!)
-# TODO: Stop bot from freaking out and gaining sentience when killed/restarted without disconnecting
-# TODO: Figure out why the bot lags so much when finding a song to play, fix that if I can (hint: probably pafy)
-# Post release milestones
-# TODO: Create a better looking help command
-# TODO: Refactor voice summon code to use ctx.author.channel.id instead of iterating through guild channels
 
 KAEBOT_VERSION = "KaeBot Alpha"
 bot = commands.Bot(description="Made by TSHMN. Version: {0}".format(KAEBOT_VERSION), command_prefix="kae ")
