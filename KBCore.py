@@ -18,7 +18,8 @@ import pafy
 KAEBOT_VERSION = "KaeBot Alpha"
 bot = commands.Bot(description="Made by TSHMN. Version: {0}".format(KAEBOT_VERSION), command_prefix="kae ")
 logging.basicConfig(level=logging.INFO)
-pafy.set_api_key("AIzaSyD2tL2vV-pbuXjun1mx23VD2WpKy5PU6_w")
+pafyapi_key = pickle.load(open("pafyapikey.kae", "rb"))
+pafy.set_api_key(pafyapi_key)
 token = pickle.load(open("token.kae", "rb"))
 discord.opus.load_opus("libopus-0.x64.dll")
 
