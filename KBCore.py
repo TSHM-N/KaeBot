@@ -7,10 +7,10 @@ import random
 import asyncio
 import urllib.parse
 import aiohttp
-import html5lib
 from bs4 import BeautifulSoup
 from datetime import datetime
 import youtube_dl
+import re
 import pafy
 
 # Made by TSHMN
@@ -356,7 +356,8 @@ class Miscellaneous:
                 content = await response.text()
             souped_content = BeautifulSoup(content, "lxml")
             firstresult_info = souped_content.find(attrs={"class": "text-left visitedlyr"})
-            await ctx.send(firstresult_info["href"])
+            firstresult_info = str(souped_content.find("a"))
+            await ctx.send(firstresult_info)
 
 
 class Seasonal:
@@ -379,7 +380,7 @@ class Seasonal:
                     await ctx.send("Your nickname is now '{}'.".format(changed_nick))
                 else:
                     await ctx.send("Your nickname is already spooky!")
-            except AttributeError:
+            except AttributeError:  # except if the person has no nick, because endswith is null
                 if not ctx.message.author.name.endswith("\U0001f383"):
                     changed_nick = ctx.message.author.name + " \U0001f383"
                     await ctx.message.author.edit(nick=changed_nick)
@@ -391,7 +392,7 @@ class Seasonal:
 
     @seasonal.command(name="christmas", brief="Adds some christmas spirit to your nickname.",
                       description="Adds a Christmas tree to your nickname. Only usable during December!")
-    async def spooky(self, ctx):
+    async def christmas(self, ctx):
         if datetime.today().month == 12:
             try:
                 if not ctx.message.author.nick.endswith("\U0001f384"):
