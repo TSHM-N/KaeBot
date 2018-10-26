@@ -368,27 +368,33 @@ class Genius:
 
         try:
             embed.set_thumbnail(url=song.song_art_image_url)
-        except AttributeError:
+        except AttributeError:  # No album art
             pass
         embed.set_footer(text=KAEBOT_VERSION)
 
-        if len(song.lyrics) <= 1000:
-            embed.add_field(name="Lyrics for '{0}' by '{1}':".format(song.title, song.artist),
-                            value=song.lyrics,
-                            inline=False)
-            await ctx.send(embed=embed)
-        else:
-            for i in range(0, len(song.lyrics), 1000):
-                embed.clear_fields()
-                embedcontent = song.lyrics[i:i+1000]
-                if not i == list(reversed(range(0, len(song.lyrics), 1000)))[-0]:
-                    embedcontent += "..."
-                if not i == list(range(0, len(song.lyrics), 1000))[0]:
-                    embedcontent = "..." + embedcontent
-                embed.add_field(name="Lyrics for '{0}' by {1}:".format(song.title, song.artist),
-                                value=embedcontent,
+        try:
+            if len(song.lyrics) <= 1000:
+                embed.add_field(name="Lyrics for '{0}' by '{1}':".format(song.title, song.artist),
+                                value=song.lyrics,
                                 inline=False)
                 await ctx.send(embed=embed)
+            else:
+                for i in range(0, len(song.lyrics), 1000):
+                    embed.clear_fields()
+                    embedcontent = song.lyrics[i:i+1000]
+                    if not i == list(reversed(range(0, len(song.lyrics), 1000)))[-0]:
+                        embedcontent += "..."
+                    if not i == list(range(0, len(song.lyrics), 1000))[0]:
+                        embedcontent = "..." + embedcontent
+                    embed.add_field(name="Lyrics for '{0}' by {1}:".format(song.title, song.artist),
+                                    value=embedcontent,
+                                    inline=False)
+                    await ctx.send(embed=embed)
+        except AttributeError:  # No lyrics, artist, title, song etc.
+            embed.add_field(name="Something went wrong...".format(song.title, song.artist),
+                            value="Oops, something broke. Try another song.",
+                            inline=False)
+            await ctx.send(embed=embed)
 
 
 class Seasonal:
