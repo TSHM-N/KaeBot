@@ -365,7 +365,11 @@ class Genius:
         embed = discord.Embed(
             colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         )
-        embed.set_thumbnail(url=song.song_art_image_url)
+
+        try:
+            embed.set_thumbnail(url=song.song_art_image_url)
+        except AttributeError:
+            pass
         embed.set_footer(text=KAEBOT_VERSION)
 
         if len(song.lyrics) <= 1000:
