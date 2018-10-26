@@ -7,21 +7,30 @@ import random
 import asyncio
 import urllib.parse
 import aiohttp
-import html5lib
 from bs4 import BeautifulSoup
 from datetime import datetime
 import youtube_dl
+import threading
 import pafy
+import lyricsgenius as genius
 
 # Made by TSHMN
 
 KAEBOT_VERSION = "KaeBot Alpha"
 bot = commands.Bot(description="Made by TSHMN. Version: {0}".format(KAEBOT_VERSION), command_prefix="kae ")
 logging.basicConfig(level=logging.INFO)
-pafyapi_key = pickle.load(open("pafyapikey.kae", "rb"))
-pafy.set_api_key(pafyapi_key)
-token = pickle.load(open("token.kae", "rb"))
 discord.opus.load_opus("libopus-0.x64.dll")
+
+PAFYKEY = pickle.load(open("pafyapikey.kae", "rb"))
+TOKEN = pickle.load(open("token.kae", "rb"))
+with open("geniusapiinfo.kae", "rb") as f:
+    genius_info = pickle.load(f)
+    GENIUS_CLIENTID = genius_info["client_id"]
+    GENIUS_CLIENTSECRET = genius_info["client_secret"]
+    GENIUS_CLIENTTOKEN = genius_info["client_access_token"]
+
+pafy.set_api_key(PAFYKEY)
+geniusapi = genius.Genius(GENIUS_CLIENTTOKEN)
 
 os.system("cls")
 print("Starting KaeBot v1...")
@@ -30,7 +39,7 @@ print("Starting KaeBot v1...")
 @bot.event
 async def on_ready():
     print("KaeBOT v1 up and running on botuser {0.user}.".format(bot))
-    print("{0.user}'s token: {1}.".format(bot, token))
+    print("{0.user}'s token: {1}.".format(bot, TOKEN))
     print("Running on the following guilds: ", end="")
     guilds = bot.guilds
     await bot.change_presence(activity=discord.Streaming(name="TSHMN's bot.", url="https://twitch.tv/monky"))
@@ -327,7 +336,7 @@ class Miscellaneous:
     async def getinvite(self, ctx):
         embed = discord.Embed(
             title="Invite KaeBot to your server!",
-            colour=discord.Color.dark_purple()
+            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         )
         embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
         embed.set_footer(text=KAEBOT_VERSION)
@@ -347,16 +356,35 @@ class Miscellaneous:
                         inline=False)
         await ctx.send(embed=embed)
 
+
+class Genius:
     @commands.command(name="lyrics", brief="Get the lyrics to a song.",
-                      description="Searches `www.azlyrics.com` for the lyrics to a specified song.")
+                      description="Searches genius.com for the lyrics to a specified song.")
     async def lyrics(self, ctx, *, search_terms):
-        async with aiohttp.ClientSession() as session:
-            async with session.get("https://search.azlyrics.com/search.php?q={}".format(search_terms.replace(" ", "+"))) as response:
-                assert response.status == 200
-                content = await response.text()
-            souped_content = BeautifulSoup(content, "lxml")
-            firstresult_info = souped_content.find(attrs={"class": "text-left visitedlyr"})
-            await ctx.send(firstresult_info["href"])
+        song = geniusapi.search_song(search_terms)
+        embed = discord.Embed(
+            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        )
+        embed.set_thumbnail(url=song.song_art_image_url)
+        embed.set_footer(text=KAEBOT_VERSION)
+
+        if len(song.lyrics) <= 1000:
+            embed.add_field(name="Lyrics for '{0}' by '{1}':".format(song.title, song.artist),
+                            value=song.lyrics,
+                            inline=False)
+            await ctx.send(embed=embed)
+        else:
+            for i in range(0, len(song.lyrics), 1000):
+                embed.clear_fields()
+                embedcontent = song.lyrics[i:i+1000]
+                if not i == list(reversed(range(0, len(song.lyrics), 1000)))[-0]:
+                    embedcontent += "..."
+                if not i == list(range(0, len(song.lyrics), 1000))[0]:
+                    embedcontent = "..." + embedcontent
+                embed.add_field(name="Lyrics for '{0}' by {1}:".format(song.title, song.artist),
+                                value=embedcontent,
+                                inline=False)
+                await ctx.send(embed=embed)
 
 
 class Seasonal:
@@ -379,7 +407,7 @@ class Seasonal:
                     await ctx.send("Your nickname is now '{}'.".format(changed_nick))
                 else:
                     await ctx.send("Your nickname is already spooky!")
-            except AttributeError:
+            except AttributeError:  # except if the person has no nick, because endswith is null
                 if not ctx.message.author.name.endswith("\U0001f383"):
                     changed_nick = ctx.message.author.name + " \U0001f383"
                     await ctx.message.author.edit(nick=changed_nick)
@@ -391,7 +419,7 @@ class Seasonal:
 
     @seasonal.command(name="christmas", brief="Adds some christmas spirit to your nickname.",
                       description="Adds a Christmas tree to your nickname. Only usable during December!")
-    async def spooky(self, ctx):
+    async def christmas(self, ctx):
         if datetime.today().month == 12:
             try:
                 if not ctx.message.author.nick.endswith("\U0001f384"):
@@ -418,5 +446,6 @@ bot.add_cog(Moderator())
 bot.add_cog(Voice())
 bot.add_cog(Miscellaneous())
 bot.add_cog(Seasonal())
+bot.add_cog(Genius())
 bot.load_extension("jishaku")
-bot.run(token)
+bot.run(TOKEN)
