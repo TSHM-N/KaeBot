@@ -18,3 +18,5 @@
 # TODO: Figure out why the bot lags so much when finding a song to play, fix that if I can (hint: probably pafy and beautifulsoup)
 # TODO: Create a better looking help command
 # TODO: Refactor voice summon code to use ctx.author.channel.id instead of iterating through guild voice channels
+# Post-release (AKA do whenever I have nothing else to work on)
+# TODO: Refactor code to load cogs from external files instead of lumping everything in one file
