@@ -361,16 +361,19 @@ class Genius:
     @commands.command(name="lyrics", brief="Get the lyrics to a song.",
                       description="Searches genius.com for the lyrics to a specified song.")
     async def lyrics(self, ctx, *, search_terms):
-        song = geniusapi.search_song(search_terms)
         embed = discord.Embed(
             colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         )
-
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.add_field(name="Now searching for '{}' on Genius.com...".format(search_terms),
+                        value="Searching for lyrics...",
+                        inline=False)
+        await ctx.send(embed=embed)
+        song = geniusapi.search_song(search_terms)
         try:
             embed.set_thumbnail(url=song.song_art_image_url)
         except AttributeError:  # No album art
             pass
-        embed.set_footer(text=KAEBOT_VERSION)
 
         try:
             if len(song.lyrics) <= 1000:
