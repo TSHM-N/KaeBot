@@ -1,3 +1,8 @@
+<a href="https://scan.coverity.com/projects/teeshmn-kaebot">
+  <img alt="Coverity Scan Build Status"
+       src="https://scan.coverity.com/projects/17082/badge.svg"/>
+</a>
+
 # KaeBot
 A constantly WIP Discord bot written in discord.py. 
 
