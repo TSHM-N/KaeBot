@@ -7,6 +7,7 @@ import random
 import asyncio
 import urllib.parse
 import aiohttp
+import json
 from bs4 import BeautifulSoup
 from datetime import datetime
 import youtube_dl
@@ -17,7 +18,6 @@ import lyricsgenius as genius
 # Made by TSHMN
 
 KAEBOT_VERSION = "KaeBot Alpha"
-bot = commands.Bot(description="Made by TSHMN. Version: {0}".format(KAEBOT_VERSION), command_prefix="kae ")
 logging.basicConfig(level=logging.INFO)
 discord.opus.load_opus("libopus-0.x64.dll")
 
@@ -28,34 +28,37 @@ with open("geniusapiinfo.kae", "rb") as f:
     GENIUS_CLIENTID = genius_info["client_id"]
     GENIUS_CLIENTSECRET = genius_info["client_secret"]
     GENIUS_CLIENTTOKEN = genius_info["client_access_token"]
-
 pafy.set_api_key(PAFYKEY)
 geniusapi = genius.Genius(GENIUS_CLIENTTOKEN)
 
+with open("serverprefixes.json", "r") as f:
+    prefixes_str = f.read()
+    prefixes = json.loads(prefixes_str)
+default_prefix = "kae "
+
+
+def prefix(instance, msg):
+    contextualguildid = str(msg.guild.id)
+    if contextualguildid not in prefixes:
+        print(prefixes)
+        print(contextualguildid)
+        with open("serverprefixes.json", "r+") as file:
+            prefixes.update({contextualguildid: ["kae "]})
+            json.dump(prefixes, file, indent=4)
+    return prefixes.get(contextualguildid, default_prefix)
+
+
+bot = commands.Bot(description="Made by TSHMN. Version: {0}".format(KAEBOT_VERSION), command_prefix=prefix,
+                   activity=discord.Streaming(name="TSHMN's bot.", url="https://twitch.tv/monky"))
+
 os.system("cls")
-print("Starting KaeBot v1...")
+print("Starting {}...".format(KAEBOT_VERSION))
 
 
 @bot.event
 async def on_ready():
-    print("KaeBOT v1 up and running on botuser {0.user}.".format(bot))
-    print("{0.user}'s token: {1}.".format(bot, TOKEN))
-    print("Running on the following guilds: ", end="")
-    guilds = bot.guilds
-    await bot.change_presence(activity=discord.Streaming(name="TSHMN's bot.", url="https://twitch.tv/monky"))
-    if len(guilds) == 0:
-        print("No guilds connected.")
-    elif len(guilds) == 1:
-        print("{0}.".format(guilds[0].name))
-    elif len(guilds) == 2:
-        print("{0} and {1}.".format(guilds[0].name, guilds[1].name))
-    else:
-        for i in guilds:
-            if guilds.index(i) == len(guilds) - 1:
-                print("and {}.".format(i.name))
-            else:
-                print(i.name, end=", ")
-        print("\n")
+    print("{0} up and running on botuser {1}.".format(KAEBOT_VERSION, bot.user))
+    print("Running on {} guilds.".format(len(bot.guilds)))
 
 
 class BotOwner:
@@ -85,7 +88,18 @@ class GuildOwner:
 
 
 class Administrator:
-    pass
+    @commands.group(name="prefix", brief="Server-specific prefix commands. Run to view prefixes.",
+                    description="This command group contains several prefix-related commands.")
+    async def prefix(self, ctx):
+        if ctx.invoked_subcommand is None:
+            embed = discord.Embed(
+                colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            )
+            embed.set_footer(text=KAEBOT_VERSION)
+            embed.add_field(name="Prefixes for {}:".format(ctx.guild.name),
+                            value=prefixes,
+                            inline=False)
+            await ctx.send(embed=embed)
 
 
 class Moderator:
