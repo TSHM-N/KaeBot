@@ -1,5 +1,4 @@
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/17082/badge.svg)](https://scan.coverity.com/projects/teeshmn-kaebot)
-[![Build Status](https://travis-ci.com/TeeSHMN/KaeBot.svg?branch=master)](https://travis-ci.com/TeeSHMN/KaeBot)
 
 # KaeBot
 A constantly WIP Discord bot written in discord.py. 
