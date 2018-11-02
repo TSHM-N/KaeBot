@@ -11,9 +11,7 @@ import json
 from bs4 import BeautifulSoup
 from datetime import datetime
 import youtube_dl
-import threading
 import pafy
-import lyricsgenius as genius
 
 # Made by TSHMN
 
@@ -29,7 +27,6 @@ with open("geniusapiinfo.kae", "rb") as f:
     GENIUS_CLIENTSECRET = genius_info["client_secret"]
     GENIUS_CLIENTTOKEN = genius_info["client_access_token"]
 pafy.set_api_key(PAFYKEY)
-geniusapi = genius.Genius(GENIUS_CLIENTTOKEN)
 
 with open("serverprefixes.json", "r") as f:
     prefixes_str = f.read()
@@ -40,8 +37,6 @@ default_prefix = "kae "
 def prefix(instance, msg):
     contextualguildid = str(msg.guild.id)
     if contextualguildid not in prefixes:
-        print(prefixes)
-        print(contextualguildid)
         with open("serverprefixes.json", "r+") as file:
             prefixes.update({contextualguildid: ["kae "]})
             json.dump(prefixes, file, indent=4)
@@ -89,17 +84,53 @@ class GuildOwner:
 
 class Administrator:
     @commands.group(name="prefix", brief="Server-specific prefix commands. Run to view prefixes.",
-                    description="This command group contains several prefix-related commands.")
+                    description="This command group contains 'add' and 'remove' commands for prefix adjustment.\n"
+                                "Prefixes can be viewed by anyone, but only changed by admins.")
     async def prefix(self, ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(
                 colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             )
-            embed.set_footer(text=KAEBOT_VERSION)
+            embed.set_footer(text="{} | Subcommands: add, remove".format(KAEBOT_VERSION))
+            embedcontent = ""
+            for i in prefixes[str(ctx.guild.id)]:
+                if i == prefixes[str(ctx.guild.id)][-1]:
+                    embedcontent += "'{}command'".format(i)
+                else:
+                    embedcontent += "'{}command', ".format(i)
             embed.add_field(name="Prefixes for {}:".format(ctx.guild.name),
-                            value=prefixes,
+                            value=embedcontent,
                             inline=False)
             await ctx.send(embed=embed)
+
+    @prefix.command(name="add", brief="Add a prefix to the server.",
+                    description="Add a server-specific prefix to KaeBot.")
+    async def add(self, ctx, *, newprefix):
+        if ctx.author.guild_permissions.administrator:
+            newprefix += " "
+            prefixes.setdefault(str(ctx.guild.id), []).append(newprefix)
+            with open("serverprefixes.json", "w") as prefixfile:
+                json.dump(prefixes, prefixfile, indent=4)
+            await ctx.send("Added '{}' as a prefix.".format(newprefix))
+        else:
+            await ctx.send("You lack the following permissions to do this:\n```css\nAdministrator\n```")
+
+    @prefix.command(name="remove", brief="Remove a prefix from the server.",
+                    description="Remove a server-specific prefix from KaeBot.")
+    async def remove(self, ctx, *, todelete):
+        if ctx.author.guild_permissions.administrator:
+            todelete += " "
+            if todelete == "kae ":
+                await ctx.send("Sorry, but you can't delete the default prefix.")
+            elif todelete not in prefixes[str(ctx.guild.id)]:
+                await ctx.send("That prefix does not exist.")
+            else:
+                prefixes[str(ctx.guild.id)].remove(todelete)
+                with open("serverprefixes.json", "w") as prefixfile:
+                    json.dump(prefixes, prefixfile, indent=4)
+                await ctx.send("Removed '{}' from the prefix list.".format(todelete))
+        else:
+            await ctx.send("You lack the following permissions to do this:\n```css\nAdministrator\n```")
 
 
 class Moderator:
@@ -121,14 +152,14 @@ class Moderator:
 
     @commands.command(name="ban", brief="Bans a user.",
                       description="Bans a specified user. Only usable by users with the Ban Members permission.")
-    async def ban(self, ctx, user: discord.Member, reason="", delete_message_days: int=0):
+    async def ban(self, ctx, user: discord.Member, reason=""):
         print("Attempted ban by {0}. Target: {1}".format(ctx.message.author, user))
         if ctx.message.author.guild_permissions.ban_members:
             await user.send(content="You have been banned from {0} by {1}.".format(ctx.message.guild,
                                                                                    ctx.message.author))
             if not reason == "":
                 await user.send(content="Reason: '{0}'".format(reason))
-            await user.ban(reason=reason, delete_message_days=delete_message_days)
+            await user.ban(reason=reason, delete_message_days=0)
             await ctx.send("{0} has been banned. Their ID: {1}".format(user, user.id))
             print("Ban successful.")
         else:
@@ -372,6 +403,9 @@ class Miscellaneous:
 
 
 class Genius:
+    baseurl = "https://api.genius.com"
+    header = {"Authorization": "Bearer " + GENIUS_CLIENTTOKEN}
+
     @commands.command(name="lyrics", brief="Get the lyrics to a song.",
                       description="Searches genius.com for the lyrics to a specified song.")
     async def lyrics(self, ctx, *, search_terms):
@@ -383,32 +417,53 @@ class Genius:
                         value="Searching for lyrics...",
                         inline=False)
         await ctx.send(embed=embed)
-        song = geniusapi.search_song(search_terms)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(Genius.baseurl + "/search",
+                                   headers=Genius.header,
+                                   data={"q": search_terms}) as response:
+                resultjson = await response.json()
+
+            async with session.get(Genius.baseurl + resultjson["response"]["hits"][0]["result"]["api_path"],
+                                   headers=Genius.header) as response:
+                songjson = await response.json()
+
+            songurl = songjson["response"]["song"]["url"]
+            songtitle = songjson["response"]["song"]["title"]
+            songartist = songjson["response"]["song"]["album"]["artist"]["name"]
+            songthumbnail = songjson["response"]["song"]["song_art_image_thumbnail_url"]
+
+            async with session.get(songurl) as response:
+                responsetext = await response.read()
+                
+        lyricsoup = BeautifulSoup(responsetext, "lxml")
+        lyrics = lyricsoup.find("div", class_="lyrics").get_text()
         try:
-            embed.set_thumbnail(url=song.song_art_image_url)
+            embed.set_thumbnail(url=songthumbnail)
         except AttributeError:  # No album art
             pass
 
         try:
-            if len(song.lyrics) <= 1000:
-                embed.add_field(name="Lyrics for '{0}' by '{1}':".format(song.title, song.artist),
-                                value=song.lyrics,
+            if len(lyrics) <= 1000:
+                embed.add_field(name="Lyrics for '{0}' by '{1}':".format(songtitle, songartist),
+                                value=lyrics,
                                 inline=False)
                 await ctx.send(embed=embed)
             else:
-                for i in range(0, len(song.lyrics), 1000):
+                for i in range(0, len(lyrics), 1000):
                     embed.clear_fields()
-                    embedcontent = song.lyrics[i:i+1000]
-                    if not i == list(reversed(range(0, len(song.lyrics), 1000)))[-0]:
+                    embedcontent = lyrics[i:i+1000]
+                    if not i == list(reversed(range(0, len(lyrics), 1000)))[-0]:
                         embedcontent += "..."
-                    if not i == list(range(0, len(song.lyrics), 1000))[0]:
+                    if not i == list(range(0, len(lyrics), 1000))[0]:
                         embedcontent = "..." + embedcontent
-                    embed.add_field(name="Lyrics for '{0}' by {1}:".format(song.title, song.artist),
+                    embed.add_field(name="Lyrics for '{0}' by {1}:".format(songtitle, songartist),
                                     value=embedcontent,
                                     inline=False)
                     await ctx.send(embed=embed)
+
         except AttributeError:  # No lyrics, artist, title, song etc.
-            embed.add_field(name="Something went wrong...".format(song.title, song.artist),
+            embed.add_field(name="Something went wrong...",
                             value="Oops, something broke. Try another song.",
                             inline=False)
             await ctx.send(embed=embed)
@@ -429,16 +484,23 @@ class Seasonal:
         if datetime.today().month == 10:
             try:
                 if not ctx.message.author.nick.endswith("\U0001f383"):
-                    changed_nick = ctx.message.author.nick + " \U0001f383"
-                    await ctx.message.author.edit(nick=changed_nick)
-                    await ctx.send("Your nickname is now '{}'.".format(changed_nick))
+                    if ctx.message.author.nick.endswith("\U0001f384"):  # If already ends with Christmas emoji
+                        changednick = ctx.message.author.nick[:-1] + " \U0001f383"
+                    else:
+                        changednick = ctx.message.author.nick + " \U0001f383"
+                    await ctx.message.author.edit(nick=changednick)
+                    await ctx.send("Your nickname is now '{}'.".format(changednick))
                 else:
                     await ctx.send("Your nickname is already spooky!")
+
             except AttributeError:  # except if the person has no nick, because endswith is null
                 if not ctx.message.author.name.endswith("\U0001f383"):
-                    changed_nick = ctx.message.author.name + " \U0001f383"
-                    await ctx.message.author.edit(nick=changed_nick)
-                    await ctx.send("Your nickname is now '{}'.".format(changed_nick))
+                    if ctx.message.author.name.endswith("\U0001f384"):  # If already ends with Christmas emoji
+                        changednick = ctx.message.author.name[:-1] + " \U0001f383"
+                    else:
+                        changednick = ctx.message.author.name + " \U0001f383"
+                    await ctx.message.author.edit(nick=changednick)
+                    await ctx.send("Your nickname is now '{}'.".format(changednick))
                 else:
                     await ctx.send("Your nickname is already spooky!")
         else:
@@ -450,16 +512,23 @@ class Seasonal:
         if datetime.today().month == 12:
             try:
                 if not ctx.message.author.nick.endswith("\U0001f384"):
-                    changed_nick = ctx.message.author.nick + " \U0001f384"
-                    await ctx.message.author.edit(nick=changed_nick)
-                    await ctx.send("Your nickname is now '{}'.".format(changed_nick))
+                    if ctx.message.author.nick.endswith("\U0001f383"):  # If already ends with Spooky emoji
+                        changednick = ctx.message.author.nick[:-1] + " \U0001f384"
+                    else:
+                        changednick = ctx.message.author.nick + " \U0001f384"
+                    await ctx.message.author.edit(nick=changednick)
+                    await ctx.send("Your nickname is now '{}'.".format(changednick))
                 else:
-                    await ctx.send("Your nickname is already spooky!")
-            except AttributeError:
+                    await ctx.send("Your nickname is already Christmassy!")
+
+            except AttributeError:  # except if the person has no nick, because endswith is null
                 if not ctx.message.author.name.endswith("\U0001f384"):
-                    changed_nick = ctx.message.author.name + " \U0001f384"
-                    await ctx.message.author.edit(nick=changed_nick)
-                    await ctx.send("Your nickname is now '{}'.".format(changed_nick))
+                    if ctx.message.author.name.endswith("\U0001f383"):  # If already ends with Spooky emoji
+                        changednick = ctx.message.author.name[:-1] + " \U0001f384"
+                    else:
+                        changednick = ctx.message.author.name + " \U0001f384"
+                    await ctx.message.author.edit(nick=changednick)
+                    await ctx.send("Your nickname is now '{}'.".format(changednick))
                 else:
                     await ctx.send("Your nickname is already Christmassy!")
         else:
