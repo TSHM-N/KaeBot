@@ -401,6 +401,22 @@ class Miscellaneous:
                         inline=False)
         await ctx.send(embed=embed)
 
+    @commands.command(name="rift", brief="Creates a rift between one channel and another.",
+                      description="Opens a rift between the channel the command is executed in and the target channel."
+                                  "\nThis rift transmits all messages made by you to the target channel until closed.")
+    async def rift(self, ctx, targetchannel: discord.TextChannel):
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        await ctx.send("Rift opened! Type .close. to close the rift.")
+        while True:
+            message = await bot.wait_for("message", check=check)
+            if message.content == ".close.":
+                await ctx.send("Rift closed.")
+                break
+            else:
+                await targetchannel.send("{} speaks from a rift: '{}'".format(ctx.author.name, message.content))
+
 
 class Genius:
     baseurl = "https://api.genius.com"
