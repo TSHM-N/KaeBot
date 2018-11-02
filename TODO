@@ -1,7 +1,6 @@
 # Alpha milestones:
 TODO: Add playlist support for 'kae play'
 TODO: Implement 'prefix add' and 'prefix remove'
-TODO: Prettify prefix viewer
 TODO: Rework some voice commands to require DJ role
 TODO: Implement voice queue system
 TODO: Add vital voice commands (commands left to do: skip, resume, pause, queue, now playing, remove, volume)
