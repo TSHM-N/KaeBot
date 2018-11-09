@@ -1,17 +1,7 @@
 import discord
 from discord.ext import commands
-import logging
-import pickle
-import os
-import random
-import asyncio
-import urllib.parse
-import aiohttp
-import json
-from bs4 import BeautifulSoup
-from datetime import datetime
-import youtube_dl
-import pafy
+import logging, pickle, os, random, asyncio, urllib.parse, aiohttp, json, bs4, datetime, youtube_dl, pafy, difflib
+import aioping, re
 
 # Made by TSHMN
 
@@ -44,8 +34,8 @@ def prefix(instance, msg):
 
 
 bot = commands.Bot(description="Made by TSHMN. Version: {0}".format(KAEBOT_VERSION), command_prefix=prefix,
-                   activity=discord.Streaming(name="TSHMN's bot.", url="https://twitch.tv/monky"))
-
+                   activity=discord.Streaming(name="TSHMN's bot | Default prefix: kae", url="https://twitch.tv/monky"))
+strcommands = []
 os.system("cls")
 print("Starting {}...".format(KAEBOT_VERSION))
 
@@ -54,6 +44,48 @@ print("Starting {}...".format(KAEBOT_VERSION))
 async def on_ready():
     print("{0} up and running on botuser {1}.".format(KAEBOT_VERSION, bot.user))
     print("Running on {} guilds.".format(len(bot.guilds)))
+    for command in bot.commands:
+        strcommands.append(str(command))
+    print("Initialised strcommands.")
+
+
+class ErrorHandler:
+    @staticmethod
+    async def on_command_error(ctx, error):
+        embed = discord.Embed(
+            title="Fatal Error:",
+            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        )
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
+
+        if hasattr(ctx.command, "on_error"):
+            return
+
+        if isinstance(error, commands.CommandNotFound):
+            try:
+                invalidcommand = re.findall(r"\"([^\"]*)\"", error.args[0])[0]
+            except IndexError:
+                invalidcommand = None
+            similar = difflib.get_close_matches(invalidcommand, strcommands, n=5, cutoff=0.5)  # Get similar words
+
+            similarstr = ""
+            if not similar:
+                similarstr = "No matches found."
+            else:
+                for simstr in similar:
+                    similarstr += "{}\n".format(simstr)
+
+            embed.add_field(name="Invalid command. Did you mean:",
+                            value=similarstr,
+                            inline=False)
+
+        else:
+            embed.add_field(name="An unhandled exception occurred.",
+                            value=error,
+                            inline=False)
+
+        await ctx.send(embed=embed)
 
 
 class BotOwner:
@@ -262,7 +294,7 @@ class Voice:
                     await ctx.send("readcontent")
                     content = await response.read()
             await ctx.send("soupify")
-            souped_content = BeautifulSoup(content, "lxml")
+            souped_content = bs4.BeautifulSoup(content, "lxml")
             await ctx.send("findattrs")
             firstvideo_href = souped_content.find(attrs={"class": "yt-uix-tile-link"})
             await ctx.send("pafy obj")
@@ -417,6 +449,11 @@ class Miscellaneous:
             else:
                 await targetchannel.send("{} speaks from a rift: '{}'".format(ctx.author.name, message.content))
 
+    @commands.command(name="botping", brief="Pong!",
+                      description="Pings the bot and gets websocket latency.")
+    async def botping(self, ctx):
+        await ctx.send("Pong! Latency: {}ms".format(round(bot.latency * 1000, 2)))
+
 
 class Genius:
     baseurl = "https://api.genius.com"
@@ -424,12 +461,12 @@ class Genius:
 
     @commands.command(name="lyrics", brief="Get the lyrics to a song.",
                       description="Searches genius.com for the lyrics to a specified song.")
-    async def lyrics(self, ctx, *, search_terms):
+    async def lyrics(self, ctx, *, searchterms):
         embed = discord.Embed(
             colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         )
         embed.set_footer(text=KAEBOT_VERSION)
-        embed.add_field(name="Now searching for '{}' on Genius.com...".format(search_terms),
+        embed.add_field(name="Now searching for '{}' on Genius.com...".format(searchterms),
                         value="Searching for lyrics...",
                         inline=False)
         await ctx.send(embed=embed)
@@ -437,7 +474,7 @@ class Genius:
         async with aiohttp.ClientSession() as session:
             async with session.get(Genius.baseurl + "/search",
                                    headers=Genius.header,
-                                   data={"q": search_terms}) as response:
+                                   data={"q": searchterms}) as response:
                 resultjson = await response.json()
 
             async with session.get(Genius.baseurl + resultjson["response"]["hits"][0]["result"]["api_path"],
@@ -452,7 +489,7 @@ class Genius:
             async with session.get(songurl) as response:
                 responsetext = await response.read()
                 
-        lyricsoup = BeautifulSoup(responsetext, "lxml")
+        lyricsoup = bs4.BeautifulSoup(responsetext, "lxml")
         lyrics = lyricsoup.find("div", class_="lyrics").get_text()
         try:
             embed.set_thumbnail(url=songthumbnail)
@@ -497,7 +534,7 @@ class Seasonal:
     @seasonal.command(name="spooky", brief="Adds some spook to your nickname.",
                       description="Adds a pumpkin to your nickname. Only usable during October!")
     async def spooky(self, ctx):
-        if datetime.today().month == 10:
+        if datetime.datetime.today().month == 10:
             try:
                 if not ctx.message.author.nick.endswith("\U0001f383"):
                     if ctx.message.author.nick.endswith("\U0001f384"):  # If already ends with Christmas emoji
@@ -525,7 +562,7 @@ class Seasonal:
     @seasonal.command(name="christmas", brief="Adds some christmas spirit to your nickname.",
                       description="Adds a Christmas tree to your nickname. Only usable during December!")
     async def christmas(self, ctx):
-        if datetime.today().month == 12:
+        if datetime.datetime.today().month == 12:
             try:
                 if not ctx.message.author.nick.endswith("\U0001f384"):
                     if ctx.message.author.nick.endswith("\U0001f383"):  # If already ends with Spooky emoji
@@ -559,5 +596,6 @@ bot.add_cog(Voice())
 bot.add_cog(Miscellaneous())
 bot.add_cog(Seasonal())
 bot.add_cog(Genius())
+bot.add_cog(ErrorHandler())
 bot.load_extension("jishaku")
 bot.run(TOKEN)
