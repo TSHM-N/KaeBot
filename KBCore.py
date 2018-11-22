@@ -191,7 +191,7 @@ class Administrator:
         if ctx.author.guild_permissions.administrator:
             if todelete.startswith("'") and todelete.endswith("'"):
                 todelete = todelete[1: -1]
-                await bot.kaedb.execute("DELETE FROM server_prefixes WHERE server_prefix = $1 AND prefix = $2", str(ctx.guild.id), todelete)
+                await bot.kaedb.execute("DELETE FROM server_prefixes WHERE server_ids = $1 AND prefix = $2", str(ctx.guild.id), todelete)
                 await ctx.send("Deleted the '{}' prefix.".format(todelete))
             else:
                 await ctx.send("Bad input! Make sure you enclose the prefix in single quotes like so: `'kae '`.")
@@ -353,10 +353,12 @@ class Miscellaneous:
             else:
                 await targetchannel.send("{} speaks from a rift: '{}'".format(ctx.author.name, message.content))
 
-    @commands.command(name="botping", brief="Pong!",
+    @commands.command(name="ping", brief="Pong!",
                       description="Pings the bot and gets websocket latency.")
-    async def botping(self, ctx):
+    async def ping(self, ctx):
         await ctx.send("Pong! Latency: {}ms".format(round(bot.latency * 1000, 2)))
+
+
 
 
 class Genius:
