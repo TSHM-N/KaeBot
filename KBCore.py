@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
-import logging, pickle, os, random, asyncio, urllib.parse, aiohttp, json, bs4, datetime, youtube_dl, pafy, difflib
-import aioping, re
+import logging, pickle, os, random, asyncio, aiohttp, asyncpg, bs4, datetime, difflib, re, json, aioconsole
 
 # Made by TSHMN
 
@@ -16,28 +15,30 @@ with open("geniusapiinfo.kae", "rb") as f:
     GENIUS_CLIENTID = genius_info["client_id"]
     GENIUS_CLIENTSECRET = genius_info["client_secret"]
     GENIUS_CLIENTTOKEN = genius_info["client_access_token"]
-pafy.set_api_key(PAFYKEY)
 
-with open("serverprefixes.json", "r") as f:
-    prefixes_str = f.read()
-    prefixes = json.loads(prefixes_str)
-default_prefix = "kae "
+strcommands = []
+with open("dbinfo.json", "r") as f:
+    psqluser = json.load(f)["user"]
+    f.seek(0)
+    psqlpass = json.load(f)["pass"]
+    credentials = {"user": psqluser, "password": psqlpass, "database": "kaebot", "host": "127.0.0.1"}
+os.system("cls")
+print("Starting {}...".format(KAEBOT_VERSION))
 
 
-def prefix(instance, msg):
-    contextualguildid = str(msg.guild.id)
-    if contextualguildid not in prefixes:
-        with open("serverprefixes.json", "r+") as file:
-            prefixes.update({contextualguildid: ["kae "]})
-            json.dump(prefixes, file, indent=4)
-    return prefixes.get(contextualguildid, default_prefix)
+async def prefix(instance, msg):
+    result = await bot.kaedb.fetch(
+        "SELECT prefix FROM server_prefixes WHERE server_id = $1",
+        str(msg.guild.id)
+    )
+    prefixes = []
+    for record in result:
+        prefixes.append(dict(record)["prefix"])
+    return prefixes
 
 
 bot = commands.Bot(description="Made by TSHMN. Version: {0}".format(KAEBOT_VERSION), command_prefix=prefix,
                    activity=discord.Streaming(name="TSHMN's bot | Default prefix: kae", url="https://twitch.tv/monky"))
-strcommands = []
-os.system("cls")
-print("Starting {}...".format(KAEBOT_VERSION))
 
 
 @bot.event
@@ -47,6 +48,37 @@ async def on_ready():
     for command in bot.commands:
         strcommands.append(str(command))
     print("Initialised strcommands.")
+    bot.kaedb = await asyncpg.create_pool(**credentials)
+    print("Connection to database established: {}".format(bot.kaedb))
+    while True:
+        consoleinput = await aioconsole.ainput("KaeBot> ")
+        try:
+            eval(consoleinput)
+        except Exception as e:
+            print(e)
+
+
+@bot.event
+async def on_guild_join(guild):
+    if guild.system_channel:
+        embed = discord.Embed(
+            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        )
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.add_field(name="Hey there, I'm KaeBot!",
+                        value="Hi! I'm KaeBot, a **discord.py** bot written by TSHMN (and aliases).\n"
+                        "I currently have {} commands available to use; type 'kae help' to see them!\n"
+                        "If you want to change my prefix, use 'kae prefix add'.\n Have fun!".format(len(bot.commands)),
+                        inline=False)
+        await guild.system_channel.send(embed=embed)
+
+    await bot.kaedb.execute("INSERT INTO server_prefixes VALUES ({}, 'kae ')".format(guild.id))
+
+
+@bot.event
+async def on_guild_remove(guild):
+    bot.kaedb.execute("DELETE FROM server_prefixes WHERE server_id = $1", guild.id)
 
 
 class ErrorHandler:
@@ -67,7 +99,7 @@ class ErrorHandler:
                 invalidcommand = re.findall(r"\"([^\"]*)\"", error.args[0])[0]
             except IndexError:
                 invalidcommand = None
-            similar = difflib.get_close_matches(invalidcommand, strcommands, n=5, cutoff=0.5)  # Get similar words
+            similar = difflib.get_close_matches(invalidcommand, strcommands, n=5, cutoff=0.6)  # Get similar words
 
             similarstr = ""
             if not similar:
@@ -94,6 +126,7 @@ class BotOwner:
     async def kill(self, ctx):
         if ctx.message.author.id == 283858617973604352:
             await ctx.send("KaeBot signing out.")
+            await bot.kaedb.close()
             await bot.logout()
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nBot Owner\n```")
@@ -105,6 +138,7 @@ class BotOwner:
             await ctx.send("Restarting...")
             # hacky af BUT it works
             os.system("py .\KBRestartHax.py")
+            await bot.kaedb.close()
             await bot.logout()
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nBot Owner\n```")
@@ -125,25 +159,29 @@ class Administrator:
             )
             embed.set_footer(text="{} | Subcommands: add, remove".format(KAEBOT_VERSION))
             embedcontent = ""
-            for i in prefixes[str(ctx.guild.id)]:
-                if i == prefixes[str(ctx.guild.id)][-1]:
-                    embedcontent += "'{}command'".format(i)
-                else:
-                    embedcontent += "'{}command', ".format(i)
+
+            result = await bot.kaedb.fetch(
+                "SELECT prefix FROM server_prefixes WHERE server_id = $1",
+                str(ctx.guild.id)
+            )
+            for record in result:
+                embedcontent += "{}command\n".format(dict(record)["prefix"])
+
             embed.add_field(name="Prefixes for {}:".format(ctx.guild.name),
                             value=embedcontent,
                             inline=False)
             await ctx.send(embed=embed)
 
-    @prefix.command(name="add", brief="Add a prefix to the server.",
-                    description="Add a server-specific prefix to KaeBot.")
-    async def add(self, ctx, *, newprefix):
+    @prefix.command(name="add", brief="Add a prefix to the server. Enclose prefix in ' '.",
+                    description="Add a server-specific prefix to KaeBot.\n Enclose prefix in ' '.")
+    async def add(self, ctx, *, newprefix: str):
         if ctx.author.guild_permissions.administrator:
-            newprefix += " "
-            prefixes.setdefault(str(ctx.guild.id), []).append(newprefix)
-            with open("serverprefixes.json", "w") as prefixfile:
-                json.dump(prefixes, prefixfile, indent=4)
-            await ctx.send("Added '{}' as a prefix.".format(newprefix))
+            if newprefix.startswith("'") and newprefix.endswith("'"):
+                newprefix = newprefix[1: -1]
+                await bot.kaedb.execute("INSERT INTO server_prefixes VALUES ($1, $2)", str(ctx.guild.id), newprefix)
+                await ctx.send("Added '{}' as a prefix.".format(newprefix))
+            else:
+                await ctx.send("Bad input! Make sure you enclose your new prefix in single quotes like so: `'kae '`.")
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nAdministrator\n```")
 
@@ -151,16 +189,12 @@ class Administrator:
                     description="Remove a server-specific prefix from KaeBot.")
     async def remove(self, ctx, *, todelete):
         if ctx.author.guild_permissions.administrator:
-            todelete += " "
-            if todelete == "kae ":
-                await ctx.send("Sorry, but you can't delete the default prefix.")
-            elif todelete not in prefixes[str(ctx.guild.id)]:
-                await ctx.send("That prefix does not exist.")
+            if todelete.startswith("'") and todelete.endswith("'"):
+                todelete = todelete[1: -1]
+                await bot.kaedb.execute("DELETE FROM server_prefixes WHERE server_prefix = $1 AND prefix = $2", str(ctx.guild.id), todelete)
+                await ctx.send("Deleted the '{}' prefix.".format(todelete))
             else:
-                prefixes[str(ctx.guild.id)].remove(todelete)
-                with open("serverprefixes.json", "w") as prefixfile:
-                    json.dump(prefixes, prefixfile, indent=4)
-                await ctx.send("Removed '{}' from the prefix list.".format(todelete))
+                await ctx.send("Bad input! Make sure you enclose the prefix in single quotes like so: `'kae '`.")
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nAdministrator\n```")
 
@@ -211,136 +245,6 @@ class Moderator:
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nBan Members\n```")
             print("Unban denied due to bad perms.")
-
-
-class Voice:
-    def __init__(self):
-        self.voiceclient = None
-        self.stream = None
-        self.songqueue = []
-        self.holdcontext = None
-
-    async def delplay(self, error=""):
-        self.voiceclient.stop()
-        del self.songqueue[0]
-        coro = self.playnext(self.holdcontext)
-        asyncio.run_coroutine_threadsafe(coro, bot.loop).result()
-
-    async def playnext(self, ctx):
-        if self.songqueue is False:
-            self.holdcontext = None
-            return
-        await ctx.send("Now playing: '{}'.".format(self.songqueue[0]["title"]))
-        audio = self.songqueue[0]["pafyobj"].getbestaudio()
-        self.stream = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(audio.url))
-        self.holdcontext = ctx
-        self.voiceclient.play(self.stream, after=self.delplay)
-
-    @commands.command(name="summon", brief="Summons the bot to the invoking user's channel.",
-                      description="Summons the bot to the invoking user's voice channel.")
-    async def summon(self, ctx):
-        for channel in ctx.message.guild.voice_channels:
-            if ctx.message.author in channel.members:
-                try:
-                    self.voiceclient = await channel.connect()
-                    print("Bot successfully summoned by {0} to {1}".format(ctx.message.author, channel))
-                except discord.ClientException:
-                    await self.voiceclient.move_to(channel)
-
-    @commands.command(name="volume", brief="Alter the volume of the bot.",
-                      description="Changes the volume of the audio being played by the bot.\n"
-                                  "Percentage can be anything between 0 and 100.\n"
-                                  "Note that by default, the bot's volume is already max (100%).")
-    async def volume(self, ctx, percentage: str):
-        stripped_percentage = float(percentage.strip("%"))
-        if stripped_percentage in range(0, 100):
-            volume = stripped_percentage / 100
-            try:
-                self.stream.volume = volume
-                await ctx.send("Volume set to {0}%.".format(percentage))
-            except AttributeError:
-                await ctx.send("Try using this command once the bot has joined voice.")
-        else:
-            await ctx.send("Cannot set volume to {0}% (range: 0%-100%).".format(percentage.strip("%")))
-
-    @commands.command(name="play", brief="Plays a Youtube video in a voice channel. Aliased to 'p'.",
-                      description="Summons the bot to the invoking user's voice channel, then plays a Youtube link or"
-                                  " searches Youtube, fetches the top result and plays that instead.\n"
-                                  "Aliased to 'p'.", aliases=["p"])
-    async def play(self, ctx, *, to_play):
-        # Summon bot
-        for channel in ctx.message.guild.voice_channels:
-            if ctx.message.author in channel.members:
-                try:
-                    self.voiceclient = await channel.connect()
-                    print("Bot successfully summoned by {0} to {1}".format(ctx.message.author, channel))
-                except discord.ClientException:
-                    await self.voiceclient.move_to(channel)
-        # Search for video if necessary, get information
-        await ctx.send("Searching for '{}' on Youtube...".format(to_play))
-        if "youtube.com/" in to_play:
-            # Treat as URL
-            video = pafy.new(to_play)
-        else:
-            # Search youtube
-            await ctx.send("urlencode")
-            query = urllib.parse.urlencode({"search_query": to_play})
-            await ctx.send("async with clientsesh")
-            async with aiohttp.ClientSession() as session:
-                await ctx.send("getresp")
-                async with session.get("http://www.youtube.com/results?{}".format(query)) as response:
-                    await ctx.send("assert 200 OK")
-                    assert response.status == 200
-                    await ctx.send("readcontent")
-                    content = await response.read()
-            await ctx.send("soupify")
-            souped_content = bs4.BeautifulSoup(content, "lxml")
-            await ctx.send("findattrs")
-            firstvideo_href = souped_content.find(attrs={"class": "yt-uix-tile-link"})
-            await ctx.send("pafy obj")
-            video = pafy.new("https://www.youtube.com" + firstvideo_href["href"])
-        await ctx.send("create vidinfo dict")
-        video_info = {
-            "pafyobj": video,
-            "title": video.title,
-            "author": video.author,
-            "duration": video.length,
-            "thumbnail": video.thumb,
-            "id": video.videoid
-        }
-        # Add to queue
-        await ctx.send("append to q")
-        self.songqueue.append(video_info)
-        await ctx.send("Got video information! Added {} to song queue.".format(video_info["title"]))
-        if self.voiceclient.is_playing() or self.voiceclient.is_paused():
-            return
-        else:
-            await self.playnext(ctx)
-
-    @commands.command(name="disconnect", brief="Disconnects the bot from the current voice channel.",
-                      description="Disconnects the bot from the current voice channel.", aliases=["d", "dc"])
-    async def disconnect(self, ctx):
-        await self.voiceclient.disconnect()
-
-    @commands.command(name="skip", brief="Skips the current song. Aliased to 's'.",
-                      description="Skips the current song. Aliased to 's'.", aliases=["s"])
-    async def skip(self, ctx):
-        await self.delplay()
-
-    @commands.command(name="stop", brief="Stops the bot's audio. Different to 'pause'.",
-                      description="Completely stops the bot's audio.\n"
-                                  "Note that this command is different to pause: pause temporarily stops the bot and"
-                                  " allows it to be resumed through 'play'/'resume', whereas stop silences the bot, "
-                                  "clears the queue and does not allow the bot to resume playing until a new song"
-                                  " has been queued.")
-    async def stop(self, ctx):
-        self.songqueue.clear()
-        self.voiceclient.stop()
-
-    @commands.command(name="queue", brief="Displays the bot's queue. Aliased to 'q'.",
-                      description="Displays the bot's queue. Aliased to 'q'.", aliases=["q"])
-    async def queue(self, ctx):
-        await ctx.send(self.songqueue)
 
 
 class Miscellaneous:
@@ -523,15 +427,7 @@ class Genius:
 
 
 class Seasonal:
-    @commands.group(name="seasonal", brief="Commands such as spooky, christmas and more.",
-                    description="This command contains several seasonal subcommands.\n"
-                                "Subcommands: spooky, christmas\n"
-                                "These can't be used until the time is right...")
-    async def seasonal(self, ctx):
-        if ctx.invoked_subcommand is None:
-            await ctx.send("Subcommands: spooky, christmas")
-
-    @seasonal.command(name="spooky", brief="Adds some spook to your nickname.",
+    @commands.command(name="spooky", brief="Adds some spook to your nickname.",
                       description="Adds a pumpkin to your nickname. Only usable during October!")
     async def spooky(self, ctx):
         if datetime.datetime.today().month == 10:
@@ -559,7 +455,7 @@ class Seasonal:
         else:
             await ctx.send("It's not October, you can't use this yet!")
 
-    @seasonal.command(name="christmas", brief="Adds some christmas spirit to your nickname.",
+    @commands.command(name="christmas", brief="Adds some christmas spirit to your nickname.",
                       description="Adds a Christmas tree to your nickname. Only usable during December!")
     async def christmas(self, ctx):
         if datetime.datetime.today().month == 12:
@@ -592,10 +488,10 @@ bot.add_cog(BotOwner())
 bot.add_cog(GuildOwner())
 bot.add_cog(Administrator())
 bot.add_cog(Moderator())
-bot.add_cog(Voice())
 bot.add_cog(Miscellaneous())
 bot.add_cog(Seasonal())
 bot.add_cog(Genius())
 bot.add_cog(ErrorHandler())
 bot.load_extension("jishaku")
+
 bot.run(TOKEN)
