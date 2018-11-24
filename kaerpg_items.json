@@ -33,16 +33,48 @@
             },
             "Info": "A self-made bow used by an amateur hunter."
         },
-        "Tattered Scroll": {
-            "Rank": "D",
-            "Damage": 13,
+        "Worldcarver Scythe": {
+            "Rank": "Omega",
+            "Damage": 1020,
+            "Scaling": {
+                "STR": "B",
+                "DEX": "A",
+                "PRE": "C",
+                "ARC": "B"
+            },
+            "Info": "The very fabric of reality seems to tear around the blade of this scythe."
+        },
+        "Flickering Blade": {
+            "Rank": "Omega",
+            "Damage": 1100,
+            "Scaling": {
+                "STR": "A",
+                "DEX": "B",
+                "PRE": "D",
+                "ARC": "B"
+            },
+            "Info": "One moment it's there, the next it's gone. Treasure it while you have it."
+        },
+        "Deadeye": {
+            "Rank": "Omega",
+            "Damage": 1057,
+            "Scaling": {
+                "STR": "B",
+                "DEX": "A",
+                "PRE": "A",
+                "ARC": "N/A"
+            },
+            "Info": "One of the few non-magical Omega weapons out there.\nForged in the cold flames of revenge, this crossbow was made to kill in one shot."
+        },
+        "The Necronomicon": {
+            "Rank": "Omega",
+            "Damage": 1069,
             "Scaling": {
                 "STR": "D",
-                "DEX": "C",
-                "PRE": "C",
+                "DEX": "B",
+                "PRE": "A",
                 "ARC": "A"
             },
-            "Info": "This scroll, although almost indecipherable, has the faintest aura of arcane energy surrounding it."
-        }
+            "Info": "Visions of unearthly creatures fill your mind when you hold this book. Be careful with this..."
     }
 }

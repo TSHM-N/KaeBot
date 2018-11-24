@@ -621,6 +621,51 @@ class KaeRPG:
                             inline=False)
             await ctx.send(embed=embed)
 
+    @kaerpg.command(name="itemlist", brief="List all items in KaeRPG.",
+                    description="List all items in KaeRPG (sorted by rank).")
+    async def itemlist(self, ctx):
+        embed = discord.Embed(
+            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        )
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+
+        embedcontent = dict.fromkeys(["Omega", "Beta", "Alpha", "S", "A", "B", "C", "D"], "")
+        for item in KaeRPG.items["Weapons"]:
+            embedcontent[KaeRPG.items['Weapons'][item]['Rank']] += f"{item}, "
+
+        for rank, content in embedcontent.items():
+            if content.endswith(", "):
+                content = content[:-2]
+            content = content if content else "No items of this rank exist."
+            embedcontent[rank] = content
+
+        embed.add_field(name="Omega Rank:",
+                        value=embedcontent["Omega"],
+                        inline=False)
+        embed.add_field(name="Beta Rank:",
+                        value=embedcontent["Beta"],
+                        inline=False)
+        embed.add_field(name="Alpha Rank:",
+                        value=embedcontent["Alpha"],
+                        inline=False)
+        embed.add_field(name="S Rank:",
+                        value=embedcontent["S"],
+                        inline=False)
+        embed.add_field(name="A Rank:",
+                        value=embedcontent["A"],
+                        inline=False)
+        embed.add_field(name="B Rank:",
+                        value=embedcontent["B"],
+                        inline=False)
+        embed.add_field(name="C Rank:",
+                        value=embedcontent["C"],
+                        inline=False)
+        embed.add_field(name="D Rank:",
+                        value=embedcontent["D"],
+                        inline=False)
+        await ctx.send(embed=embed)
+
 
 bot.add_cog(BotOwner())
 bot.add_cog(GuildOwner())
@@ -630,7 +675,7 @@ bot.add_cog(Miscellaneous())
 bot.add_cog(Seasonal())
 bot.add_cog(Genius())
 bot.add_cog(KaeRPG())
-bot.add_cog(ErrorHandler())
+# bot.add_cog(ErrorHandler())
 bot.load_extension("jishaku")
 
 bot.run(TOKEN)
