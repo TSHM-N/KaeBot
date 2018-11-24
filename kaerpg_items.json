@@ -1,0 +1,48 @@
+{
+    "Weapons": {
+        "Lumber's Axe": {
+            "Rank": "D",
+            "Damage": 18,
+            "Scaling": {
+                "STR": "C",
+                "DEX": "D",
+                "PRE": "C",
+                "ARC": "N/A"
+            },
+            "Info": "A regular lumber's axe, normally used to cut wood."
+        },
+        "Makeshift Shiv": {
+            "Rank": "D",
+            "Damage": 15,
+            "Scaling": {
+                "STR": "D",
+                "DEX": "B",
+                "PRE": "B",
+                "ARC": "N/A"
+            },
+            "Info": "A makeshift shiv McGuyvered together from a sharp rock, a stick and some twine."
+        },
+        "Hunter's Bow": {
+            "Rank": "D",
+            "Damage": 16,
+            "Scaling": {
+                "STR": "C",
+                "DEX": "C",
+                "PRE": "B",
+                "ARC": "N/A"
+            },
+            "Info": "A self-made bow used by an amateur hunter."
+        },
+        "Tattered Scroll": {
+            "Rank": "D",
+            "Damage": 13,
+            "Scaling": {
+                "STR": "D",
+                "DEX": "C",
+                "PRE": "C",
+                "ARC": "A"
+            },
+            "Info": "This scroll, although almost indecipherable, has the faintest aura of arcane energy surrounding it."
+        }
+    }
+}

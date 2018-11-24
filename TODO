@@ -1,9 +1,10 @@
 # Alpha milestones:
-TODO: Implement purge, prune, masskick, massban, remind, timezone, guessthenumber
-TODO: Add KaeRPG and flesh it out
+TODO: Implement purge, prune, allkick, allban, timeconvert
+TODO: Refactor .format() to fstring
 TODO: Fix any other major bugs (obviously)
 # Beta milestones
 TODO: Add cooldowns for problematic commands (example: 'lyrics', has the potential to spam channels)
+TODO: Flesh out KaeRPG
 TODO: Replace some plaintext responses with fancier responses and/or embeds
 TODO: Cram as many commands as I can into this thing
 TODO: Get rid of the god-awful restarthax python file and integrate another solution to restart the bot

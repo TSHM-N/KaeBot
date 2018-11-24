@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import logging, pickle, os, random, asyncio, aiohttp, asyncpg, bs4, datetime, difflib, re, json, aioconsole
+import logging, pickle, os, random, asyncio, aiohttp, asyncpg, bs4, datetime, difflib, re, json, aioconsole, tabulate
 
 # Made by TSHMN
 
@@ -53,7 +53,7 @@ async def on_ready():
     while True:
         consoleinput = await aioconsole.ainput("KaeBot> ")
         try:
-            eval(consoleinput)
+            exec(consoleinput)
         except Exception as e:
             print(e)
 
@@ -191,7 +191,7 @@ class Administrator:
         if ctx.author.guild_permissions.administrator:
             if todelete.startswith("'") and todelete.endswith("'"):
                 todelete = todelete[1: -1]
-                await bot.kaedb.execute("DELETE FROM server_prefixes WHERE server_ids = $1 AND prefix = $2", str(ctx.guild.id), todelete)
+                await bot.kaedb.execute("DELETE FROM server_prefixes WHERE server_id = $1 AND prefix = $2", str(ctx.guild.id), todelete)
                 await ctx.send("Deleted the '{}' prefix.".format(todelete))
             else:
                 await ctx.send("Bad input! Make sure you enclose the prefix in single quotes like so: `'kae '`.")
@@ -341,12 +341,9 @@ class Miscellaneous:
                       description="Opens a rift between the channel the command is executed in and the target channel."
                                   "\nThis rift transmits all messages made by you to the target channel until closed.")
     async def rift(self, ctx, targetchannel: discord.TextChannel):
-        def check(m):
-            return m.author == ctx.author and m.channel == ctx.channel
-
         await ctx.send("Rift opened! Type .close. to close the rift.")
         while True:
-            message = await bot.wait_for("message", check=check)
+            message = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
             if message.content == ".close.":
                 await ctx.send("Rift closed.")
                 break
@@ -358,7 +355,27 @@ class Miscellaneous:
     async def ping(self, ctx):
         await ctx.send("Pong! Latency: {}ms".format(round(bot.latency * 1000, 2)))
 
+    @commands.command(name="countdown", brief="Start a countdown to 0 (30 seconds max).",
+                      description="Start a countdown going down to 0. The maximum start value is 30 seconds.")
+    async def countdown(self, ctx, seconds: int):
+        if seconds <= 0:
+            await ctx.send("The countdown start can't be 0 or less!")
+        elif seconds > 30:
+            await ctx.send("That value is too big (<30).")
+        else:
+            while seconds != 0:
+                await ctx.send(f"{seconds}...")
+                await asyncio.sleep(1)
+                seconds -= 1
+            await ctx.send("Go!")
 
+    @commands.command(name="pat", brief="Pat someone on the head.",
+                      description="Pat someone on the head.")
+    async def pat(self, ctx, user: discord.Member, *, reason: str=""):
+        if reason:
+            await ctx.send(f"{ctx.author.mention} gently pats {user.mention} and says '{reason}'.")
+        else:
+            await ctx.send(f"{ctx.author.mention} gently pats {user.mention}.")
 
 
 class Genius:
@@ -486,6 +503,125 @@ class Seasonal:
             await ctx.send("It's not December, you can't use this yet!")
 
 
+class KaeRPG:
+    with open("kaerpg_items.json", "r") as f:
+        items = json.load(f)
+
+    @commands.group(name="kaerpg", brief="A command group for every KaeRPG command.",
+                    description="A command group for every KaeRPG command.")
+    async def kaerpg(self, ctx):
+        if ctx.invoked_subcommand is None:
+            embed = discord.Embed(
+                colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            )
+            embed.set_footer(text=KAEBOT_VERSION)
+            embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+            embedcontent = ""
+            for command in KaeRPG.kaerpg.commands:
+                embedcontent += f"{command}\n"
+            embed.add_field(name="KaeRPG commands:",
+                            value=embedcontent,
+                            inline=False)
+            await ctx.send(embed=embed)
+
+    @kaerpg.command(name="info", brief="Learn about KaeRPG.",
+                    description="View an explanation of KaeRPG and its mechanics.")
+    async def info(self, ctx):
+        embed = discord.Embed(
+            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        )
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.add_field(name="Overview",
+                        value="KaeRPG is a built-in RPG integrated fully into KaeBot.\n"
+                        "Everything you do in KaeRPG is saved for later use, so you can come and go as you please.\n"
+                        "Information is saved across servers, so you can start on one server and continue on"
+                        "another.\n"
+                        "KaeRPG also features multiplayer, both in the same server or across servers!",
+                        inline=False)
+        embed.add_field(name="Stats",
+                        value="KaeRPG has six stats: Strength, Dexterity, Precision, Arcane, Constitution and Agility"
+                        " (STR, DEX, PRE, ARC, CON, AGI).\n"
+                        "Strength, Dexterity, Precision and Arcane scale the strength of your weapons (see Items).\n"
+                        "Constitution determines your character's base HP, and Agility determines who strikes first"
+                        " in a battle.",
+                        inline=True)
+        embed.add_field(name="Weapons",
+                        value="Weapons are used in combat to deal damage. They have three attributes:\n"
+                        "Rank: How valuable the item is compared to other weapons (D, C, B, A, S, Alpha, Beta,"
+                        " Omega).\n"
+                        "Damage: The base damage of the weapon, without scaling.\n"
+                        "Scaling: How the weapon's damage increases based on your stats. For example, if a weapon"
+                        " has a STR scale of C and a DEX scale of B, your dexterity stat will be more important"
+                        " to the weapon's damage than your strength stat.\n"
+                        "Also, note that many weapons have no Arcane scaling whatsoever because they lack magical"
+                        " power of any sort.",
+                        inline=True)
+        embed.add_field(name="Armour",
+                        value="Armour is used in combat to negate damage. Armour has two attributes: "
+                        "rank (how valuable the item is compared to other armour (D, C, B, A, S, Alpha, Beta,"
+                        " Omega)) and protection (how much damage the armour negates).",
+                        inline=True)
+        embed.add_field(name="Consumables",
+                        value="The other kind of items in KaeRPG are consumables, which are one-use items that provide "
+                              "an effect. Most of them can be used in and out of combat.",
+                        inline=True)
+        await ctx.send(embed=embed)
+
+    @kaerpg.command(name="makecharacter", brief="Create a KaeRPG character.",
+                    description="Start KaeRPG by creating a character.")
+    async def makecharacter(self, ctx):
+        await ctx.send("Entered character creation!\nFirstly, specify your character's name (10 characters or less).")
+        while True:
+            name = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
+            name = name.content
+            if len(name) <= 10 or len(name) == 0:
+                break
+            else:
+                await ctx.send("That name is too long (>10 characters). Try again.")
+
+        await ctx.send(KaeRPG.items)
+        # for i in KaeRPG.items:
+        # await ctx.send(f"Your character is named {name}. What weapon will they start with?\n"
+        #                f"```css{weapons}```")
+
+    @kaerpg.command(name="iteminfo", brief="Check an item.")
+    async def iteminfo(self, ctx, *, item: str):
+        embed = discord.Embed(
+            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        )
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+
+        try:
+            itemdict = KaeRPG.items["Weapons"][item]
+            embedcontent = f"Rank: {itemdict['Rank']}\n"
+            embedcontent += f"Damage: {itemdict['Damage']}\n"
+            embedcontent += "Scaling: "
+            for scale in itemdict['Scaling']:
+                if scale == "ARC":
+                    embedcontent += f"{scale} {itemdict['Scaling'][scale]}"
+                else:
+                    embedcontent += f"{scale} {itemdict['Scaling'][scale]} / "
+            embedcontent += f"\nInfo: *{itemdict['Info']}*"
+
+            embed.add_field(name=item,
+                            value=embedcontent,
+                            inline=False)
+            await ctx.send(embed=embed)
+
+        except KeyError:
+            similaritems = difflib.get_close_matches(item, KaeRPG.items["Weapons"].keys(), n=5, cutoff=0.6)
+            embedcontent = ""
+            for similar in similaritems:
+                embedcontent += f"{similar}\n"
+            embedcontent = embedcontent if embedcontent else "No similar matches found."
+            embed.add_field(name="No matches found. Did you mean:",
+                            value=embedcontent,
+                            inline=False)
+            await ctx.send(embed=embed)
+
+
 bot.add_cog(BotOwner())
 bot.add_cog(GuildOwner())
 bot.add_cog(Administrator())
@@ -493,6 +629,7 @@ bot.add_cog(Moderator())
 bot.add_cog(Miscellaneous())
 bot.add_cog(Seasonal())
 bot.add_cog(Genius())
+bot.add_cog(KaeRPG())
 bot.add_cog(ErrorHandler())
 bot.load_extension("jishaku")
 
