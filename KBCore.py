@@ -643,11 +643,11 @@ class KaeRPG:
         embed.add_field(name="Omega Rank:",
                         value=embedcontent["Omega"],
                         inline=False)
-        embed.add_field(name="Beta Rank:",
-                        value=embedcontent["Beta"],
-                        inline=False)
         embed.add_field(name="Alpha Rank:",
                         value=embedcontent["Alpha"],
+                        inline=False)
+        embed.add_field(name="Beta Rank:",
+                        value=embedcontent["Beta"],
                         inline=False)
         embed.add_field(name="S Rank:",
                         value=embedcontent["S"],

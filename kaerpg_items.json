@@ -76,5 +76,61 @@
                 "ARC": "A"
             },
             "Info": "Visions of unearthly creatures fill your mind when you hold this book. Be careful with this..."
+        },
+        "Staff of Galdiea": {
+            "Rank": "Omega",
+            "Damage": 1037,
+            "Scaling": {
+                "STR": "D",
+                "DEX": "A",
+                "PRE": "B",
+                "ARC": "A"
+            },
+            "Info": "This staff, treasured and powerful, was once believed to belong to the Goddess Galdiea. You feel blessed while wielding this..."
+        },
+        "'Nick'": {
+            "Rank": "Beta",
+            "Damage": 769,
+            "Scaling": {
+                "STR": "B",
+                "DEX": "B",
+                "PRE": "C",
+                "ARC": "N/A"
+            },
+            "Info": "This sword can do a lot of work in one day, but most people don't seem to like it."
+        },
+        "Voodoo Glove": {
+            "Rank": "Alpha",
+            "Damage": 666,
+            "Scaling": {
+                "STR": "D",
+                "DEX": "A",
+                "PRE": "B",
+                "ARC": "A"
+            },
+            "Info": "Pull the strings of your enemies."
+        },
+        "Bear Gloves": {
+            "Rank": "A",
+            "Damage": 530,
+            "Scaling": {
+                "STR": "A",
+                "DEX": "D",
+                "PRE": "B",
+                "ARC": "N/A"
+            },
+            "Info": "Channel your Russian spirit and become the bear."
+        },
+        "Lyreaoux Sword": {
+            "Rank": "Beta",
+            "Damage": 800,
+            "Scaling": {
+                "STR": "A",
+                "DEX": "B",
+                "PRE": "B",
+                "ARC": "C"
+            },
+            "Info": "A rare sword made out of various strong metals. Used by many great travellers over the years.\nSome people say the sword holds greater potential than what it seems."
+        }
     }
 }
