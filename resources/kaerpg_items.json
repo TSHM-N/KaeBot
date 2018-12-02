@@ -217,13 +217,34 @@
             "Protection": 15,
             "Type": "Heavy",
             "Info": "Heavy iron plating, marred by decades of rust, weighs down upon your shoulders when you wear this."
+        },
+        "Worn Goblin Tunic": {
+            "Rank": "D",
+            "Protection": 7,
+            "Type": "Light",
+            "Info": "It reeks of sweaty Goblin, but is hardened with natural material and leather."
         }
     },
     "Consumables": {
         "Lesser Health Potion": {
-            "Value": "2KC",
-            "Effect": "PLAYER HP +20",
+            "Value": "10KC",
+            "Effect": "PLAYER HP +10",
             "Info": "A weak health potion brewed by an amateur alchemist. Heals you for 20HP upon usage."
+        },
+        "Health Potion": {
+            "Value": "25KC",
+            "Effect": "PLAYER HP +30",
+            "Info": "A regular health potion brewed by a competent alchemist. Heals you for 30HP upon usage."
+        },
+        "Greater Health Potion": {
+            "Value": "55KC",
+            "Effect": "PLAYER HP +70",
+            "Info": "A strong health potion brewed by an elder alchemist. Heals you for 50HP upon usage."
+        },
+        "Eldritch Health Potion": {
+            "Value": "300KC",
+            "Effect": "PLAYER HP MAX; ARMOR PROTECTION NULL /1/; WEAPON DAMAGE NULL /1/; PLAYER STATS NULL /1/",
+            "Info": "An unholy concoction. Invigorates you to your full potential, but simultaneously brings you to your weakest state...\nUse at your own risk."
         }
     }
 }
