@@ -8,7 +8,7 @@
         },
         "Lakeside": {
             "Enemies": ["Blue Slime", "Massive Toad", "Living Tuft"],
-            "Number of Enemies": 4,
+            "Number of Enemies": 3,
             "Minlevel": 3,
             "Bosses": ["Water Elemental"]
         }
