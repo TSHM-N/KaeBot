@@ -5,6 +5,12 @@
             "Number of Enemies": 3,
             "Minlevel": 1,
             "Bosses": ["Breaker Goblin"]
+        },
+        "Lakeside": {
+            "Enemies": ["Blue Slime", "Massive Toad", "Living Tuft"],
+            "Number of Enemies": 4,
+            "Minlevel": 3,
+            "Bosses": ["Water Elemental"]
         }
     },
 
@@ -32,6 +38,30 @@
             "Resistance": 8,
             "Damage": 10,
             "Info": "A stronger variant of the goblin. Tread with caution: this enemy is the bane of new adventurers."
-        }
+        },
+        "Blue Slime": {
+            "Health": 20,
+            "Resistance": 5,
+            "Damage": 3,
+            "Info": "A seemingly harmless creature. These slimes can soak up a few hits."
+        },
+        "Massive Toad": {
+            "Health": 20,
+            "Resistance": 3,
+            "Damage": 7,
+            "Info": "An abnormally massive toad. It resembles a fungal balloon."
+        },
+        "Living Tuft": {
+            "Health": 10,
+            "Resistance": 1,
+            "Damage": 12,
+            "Info": "An threat unseen without looking hard enough. Its head mimics a razor sharp grass tuft."
+        },
+        "Water Elemental": {
+            "Health": 46,
+            "Resistance": 10,
+            "Damage": 9,
+            "Info": "It hits with overwhelming tidal power. Its water-like body allows it to morph to take less damage from attacks."
+                }
     }
 }
