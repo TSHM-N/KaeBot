@@ -15,4 +15,4 @@ As KaeBot is currently in active development, I have no plans to release a publi
 You're more than welcome to try, though.
 
 # License
-KaeBot is licensed under the [MIT License](LICENSE).
+KaeBot is licensed under the [Apache License 2.0](LICENSE).
