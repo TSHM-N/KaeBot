@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import logging, pickle, os, random, asyncio, aiohttp, asyncpg, bs4, datetime, difflib, re, json, aioconsole, tabulate
+import sys
 
 # Made by TSHMN
 
@@ -41,6 +42,10 @@ bot = commands.Bot(description="Made by TSHMN. Version: {0}".format(KAEBOT_VERSI
                    activity=discord.Streaming(name="TSHMN's bot | Default prefix: kae", url="https://twitch.tv/monky"))
 
 
+async def poolinit(con):
+    await con.set_builtin_type_codec("hstore", codec_name="pg_contrib.hstore")
+
+
 @bot.event
 async def on_ready():
     print("{0} up and running on botuser {1}.".format(KAEBOT_VERSION, bot.user))
@@ -48,12 +53,16 @@ async def on_ready():
     for command in bot.commands:
         strcommands.append(str(command))
     print("Initialised strcommands.")
-    bot.kaedb = await asyncpg.create_pool(**credentials)
+    bot.kaedb = await asyncpg.create_pool(
+        **credentials,
+        max_inactive_connection_lifetime=5,
+        init=poolinit
+    )
     print("Connection to database established: {}".format(bot.kaedb))
     while True:
         consoleinput = await aioconsole.ainput("KaeBot> ")
         try:
-            exec(consoleinput)
+            eval(consoleinput)
         except Exception as e:
             print(e)
 
@@ -61,15 +70,13 @@ async def on_ready():
 @bot.event
 async def on_guild_join(guild):
     if guild.system_channel:
-        embed = discord.Embed(
-            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        )
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=KAEBOT_VERSION)
         embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
         embed.add_field(name="Hey there, I'm KaeBot!",
                         value="Hi! I'm KaeBot, a **discord.py** bot written by TSHMN (and aliases).\n"
-                        "I currently have {} commands available to use; type 'kae help' to see them!\n"
-                        "If you want to change my prefix, use 'kae prefix add'.\n Have fun!".format(len(bot.commands)),
+                              "I currently have {} commands available to use; type 'kae help' to see them!\n"
+                              "If you want to change my prefix, use 'kae prefix add'.\n Have fun!".format(len(bot.commands)),
                         inline=False)
         await guild.system_channel.send(embed=embed)
 
@@ -86,7 +93,7 @@ class ErrorHandler:
     async def on_command_error(ctx, error):
         embed = discord.Embed(
             title="Fatal Error:",
-            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            colour=discord.Color.from_rgb(81, 0, 124)
         )
         embed.set_footer(text=KAEBOT_VERSION)
         embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
@@ -154,9 +161,7 @@ class Administrator:
                                 "Prefixes can be viewed by anyone, but only changed by admins.")
     async def prefix(self, ctx):
         if ctx.invoked_subcommand is None:
-            embed = discord.Embed(
-                colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-            )
+            embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
             embed.set_footer(text="{} | Subcommands: add, remove".format(KAEBOT_VERSION))
             embedcontent = ""
 
@@ -202,7 +207,7 @@ class Administrator:
 class Moderator:
     @commands.command(name="kick", brief="Kicks a user.",
                       description="Kicks a specified user. Only usable by users with the Kick Members permission.")
-    async def kick(self, ctx, user: discord.Member, reason=""):
+    async def kick(self, ctx, user: discord.Member, *, reason=""):
         print("Attempted kick by {0}. Target: {1}".format(ctx.message.author, user))
         if ctx.message.author.guild_permissions.kick_members:
             await user.send(content="You have been kicked from {0} by {1}.".format(ctx.message.guild,
@@ -218,7 +223,7 @@ class Moderator:
 
     @commands.command(name="ban", brief="Bans a user.",
                       description="Bans a specified user. Only usable by users with the Ban Members permission.")
-    async def ban(self, ctx, user: discord.Member, reason=""):
+    async def ban(self, ctx, user: discord.Member, *, reason=""):
         print("Attempted ban by {0}. Target: {1}".format(ctx.message.author, user))
         if ctx.message.author.guild_permissions.ban_members:
             await user.send(content="You have been banned from {0} by {1}.".format(ctx.message.guild,
@@ -317,7 +322,7 @@ class Miscellaneous:
     async def getinvite(self, ctx):
         embed = discord.Embed(
             title="Invite KaeBot to your server!",
-            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            colour=discord.Color.from_rgb(81, 0, 124)
         )
         embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
         embed.set_footer(text=KAEBOT_VERSION)
@@ -386,7 +391,7 @@ class Genius:
                       description="Searches genius.com for the lyrics to a specified song.")
     async def lyrics(self, ctx, *, searchterms):
         embed = discord.Embed(
-            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            colour=discord.Color.from_rgb(81, 0, 124)
         )
         embed.set_footer(text=KAEBOT_VERSION)
         embed.add_field(name="Now searching for '{}' on Genius.com...".format(searchterms),
@@ -411,7 +416,7 @@ class Genius:
 
             async with session.get(songurl) as response:
                 responsetext = await response.read()
-                
+
         lyricsoup = bs4.BeautifulSoup(responsetext, "lxml")
         lyrics = lyricsoup.find("div", class_="lyrics").get_text()
         try:
@@ -504,15 +509,49 @@ class Seasonal:
 
 
 class KaeRPG:
-    with open("kaerpg_items.json", "r") as f:
+    with open("resources/kaerpg_items.json", "r") as f:
         items = json.load(f)
 
-    @commands.group(name="kaerpg", brief="A command group for every KaeRPG command.",
-                    description="A command group for every KaeRPG command.")
+    with open("resources/kaerpg_enemies.json", "r") as f:
+        dungeons = json.load(f)["Dungeons"]
+        f.seek(0)
+        enemies = json.load(f)["Enemies"]
+
+    @staticmethod
+    async def playerdamagecalc(self, weapondamage: int, weaponscaling: dict, characterstats: dict, enemyresistance: int):
+        scalingmultiplier = {}
+        for key, val in weaponscaling.items():
+            if val == "A":
+                scalingmultiplier[key] = 0.90
+            elif val == "B":
+                scalingmultiplier[key] = 0.70
+            elif val == "C":
+                scalingmultiplier[key] = 0.50
+            elif val == "D":
+                scalingmultiplier[key] = 0.30
+            elif val == "N/A":
+                scalingmultiplier[key] = 0
+            else:
+                raise ValueError(f"Bad scaling value in keypair {key}:{val}")
+
+        rawdamageboost = 0
+        for key, val in scalingmultiplier.items():
+            rawdamageboost += val * int(characterstats[key])
+
+        critboost = 1.5 if random.random() > 0.95 else 1
+        fluctuation = random.uniform(weapondamage + rawdamageboost * -0.9, weapondamage + rawdamageboost * 0.9)
+        return round(((weapondamage + rawdamageboost) * critboost + fluctuation) / enemyresistance)
+
+    @staticmethod
+    async def enemydamagecalc(self, enemydamage: int):
+        return round(enemydamage + random.uniform(enemydamage * -0.9, enemydamage * 0.9))
+
+    @commands.group(name="kaerpg", brief="A command group for every KaeRPG command. Aliased to kr.",
+                    description="A command group for every KaeRPG command. Aliased to kr.", aliases=["kr"])
     async def kaerpg(self, ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(
-                colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+                colour=discord.Color.from_rgb(81, 0, 124)
             )
             embed.set_footer(text=KAEBOT_VERSION)
             embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
@@ -524,76 +563,164 @@ class KaeRPG:
                             inline=False)
             await ctx.send(embed=embed)
 
-    @kaerpg.command(name="info", brief="Learn about KaeRPG.",
-                    description="View an explanation of KaeRPG and its mechanics.")
-    async def info(self, ctx):
-        embed = discord.Embed(
-            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        )
+    @kaerpg.command(name="beginnersguide", brief="Open a beginner's guide for KaeRPG.",
+                    description="Open a beginner's guide for KaeRPG.")
+    async def beginnersguide(self, ctx):
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=KAEBOT_VERSION)
         embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
-        embed.add_field(name="Overview",
-                        value="KaeRPG is a built-in RPG integrated fully into KaeBot.\n"
-                        "Everything you do in KaeRPG is saved for later use, so you can come and go as you please.\n"
-                        "Information is saved across servers, so you can start on one server and continue on"
-                        "another.\n"
-                        "KaeRPG also features multiplayer, both in the same server or across servers!",
+        embed.add_field(name="Beginner's Guide to KaeRPG",
+                        value="To start playing, create a character using 'prefix kaerpg makecharacter'.\n"
+                              "Once you have a character, you can access information related to your character using"
+                              " 'prefix kaerpg characterinfo'. This includes your character name, level, experience and "
+                              "inventory.\nTo access a dungeon and fight enemies for loot, type 'prefix kaerpg dungeonlist'"
+                              " to list dungeons and type 'prefix kaerpg raid dungeonname' to raid that dungeon.\n"
+                              "For more information, type 'prefix kaerpg info' and then type 'prefix kaerpg info topic'"
+                              " to learn about a specific topic.\n"
+                              "For a list of other commands, type 'prefix kaerpg'.",
                         inline=False)
-        embed.add_field(name="Stats",
-                        value="KaeRPG has six stats: Strength, Dexterity, Precision, Arcane, Constitution and Agility"
-                        " (STR, DEX, PRE, ARC, CON, AGI).\n"
-                        "Strength, Dexterity, Precision and Arcane scale the strength of your weapons (see Items).\n"
-                        "Constitution determines your character's base HP, and Agility determines who strikes first"
-                        " in a battle.",
-                        inline=True)
-        embed.add_field(name="Weapons",
-                        value="Weapons are used in combat to deal damage. They have three attributes:\n"
-                        "Rank: How valuable the item is compared to other weapons (D, C, B, A, S, Alpha, Beta,"
-                        " Omega).\n"
-                        "Damage: The base damage of the weapon, without scaling.\n"
-                        "Scaling: How the weapon's damage increases based on your stats. For example, if a weapon"
-                        " has a STR scale of C and a DEX scale of B, your dexterity stat will be more important"
-                        " to the weapon's damage than your strength stat.\n"
-                        "Also, note that many weapons have no Arcane scaling whatsoever because they lack magical"
-                        " power of any sort.",
-                        inline=True)
-        embed.add_field(name="Armour",
-                        value="Armour is used in combat to negate damage. Armour has two attributes: "
-                        "rank (how valuable the item is compared to other armour (D, C, B, A, S, Alpha, Beta,"
-                        " Omega)) and protection (how much damage the armour negates).",
-                        inline=True)
-        embed.add_field(name="Consumables",
-                        value="The other kind of items in KaeRPG are consumables, which are one-use items that provide "
-                              "an effect. Most of them can be used in and out of combat.",
-                        inline=True)
         await ctx.send(embed=embed)
 
     @kaerpg.command(name="makecharacter", brief="Create a KaeRPG character.",
                     description="Start KaeRPG by creating a character.")
     async def makecharacter(self, ctx):
-        await ctx.send("Entered character creation!\nFirstly, specify your character's name (10 characters or less).")
-        while True:
-            name = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
-            name = name.content
-            if len(name) <= 10 or len(name) == 0:
-                break
-            else:
-                await ctx.send("That name is too long (>10 characters). Try again.")
+        if await bot.kaedb.fetchrow("SELECT * FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)):
+            await ctx.send("You already have a character.")
+        else:
+            embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
+            embed.set_footer(text=KAEBOT_VERSION)
+            embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
-        await ctx.send(KaeRPG.items)
-        # for i in KaeRPG.items:
-        # await ctx.send(f"Your character is named {name}. What weapon will they start with?\n"
-        #                f"```css{weapons}```")
+            await ctx.send("Entered character creation!\n"
+                           "Firstly, specify your character's name (10 characters or less).")
+            while True:
+                name = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
+                name = name.content
+                if len(name) <= 10:
+                    break
+                else:
+                    await ctx.send("That name is too long (>10 characters). Try again.")
 
-    @kaerpg.command(name="iteminfo", brief="Check an item.")
+            statspecs = {
+                "1": "STR 15 / DEX 12 / PRE 10 / ARC 8 / CON 13 / AGI 8",
+                "2": "STR 8 / DEX 15 / PRE 12 / ARC 8 / CON 10 / AGI 10",
+                "3": "STR 10 / DEX 12 / PRE 15 / ARC 8 / CON 8 / AGI 10",
+                "4": "STR 20 / DEX 8 / PRE 8 / ARC 8 / CON 8 / AGI 8",
+                "5": "STR 10 / DEX 10 / PRE 12 / ARC 15 / CON 8 / AGI 12",
+            }
+            for key in statspecs.keys():
+                embed.add_field(name=key,
+                                value=statspecs[key],
+                                inline=False)
+            await ctx.send(f"Your character is named {name}. What stats will they have? (Choose 1, 2, 3, 4 or 5).",
+                           embed=embed)
+            embed.clear_fields()
+
+            while True:
+                statchoice = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
+                statchoice = statchoice.content
+                if statchoice not in ["1", "2", "3", "4", "5"]:
+                    await ctx.send("That's not one of the stat specs previously sent. Make sure to phrase your answer "
+                                   "as '1', not 'Stat Spec 1' (no quotes).")
+                else:
+                    stats = statspecs[statchoice]
+                    break
+
+            startweapons = ""
+            for weapon in ["Lumber's Axe", "Makeshift Shiv", "Hunter's Bow", "Tattered Scroll"]:
+                startweapons += f"{weapon}:\n"
+                startweapons += f"Rank: {KaeRPG.items['Weapons'][weapon]['Rank']}\n"
+                startweapons += f"Damage: {KaeRPG.items['Weapons'][weapon]['Damage']}\n"
+                startweapons += "Scaling: "
+                for stat, scale in KaeRPG.items["Weapons"][weapon]["Scaling"].items():
+                    startweapons += f"{stat} {scale} / "
+                startweapons = startweapons[:-3] + "\n"
+                startweapons += f"Info: {KaeRPG.items['Weapons'][weapon]['Info']}"
+                if not weapon == "Tattered Scroll":
+                    startweapons += "\n\n"
+            embed.add_field(name="Starting weapon choices:",
+                            value=startweapons,
+                            inline=False)
+
+            await ctx.send(f"Your character is named {name} and has the following stats: {stats}. What weapon will they start with?\n", embed=embed)
+            embed.clear_fields()
+            while True:
+                weapon = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
+                weapon = weapon.content
+                if weapon not in ["Lumber's Axe", "Makeshift Shiv", "Hunter's Bow", "Tattered Scroll"]:
+                    await ctx.send("That's not one of the specified starting weapons.")
+                else:
+                    break
+
+            startarmour = ""
+            for armour in ["Leather Carapace", "Warrior's Mail", "Rusted Paladin's Armour"]:
+                startarmour += f"{armour}:\n"
+                startarmour += f"Rank: {KaeRPG.items['Armour'][armour]['Rank']}\n"
+                startarmour += f"Protection: {KaeRPG.items['Armour'][armour]['Protection']}\n"
+                startarmour += f"Type: {KaeRPG.items['Armour'][armour]['Type']}\n"
+                startarmour += f"Info: {KaeRPG.items['Armour'][armour]['Info']}"
+                if not armour == "Rusted Paladin's Armour":
+                    startarmour += "\n\n"
+            embed.add_field(name="Starting armour choices:",
+                            value=startarmour,
+                            inline=False)
+
+            await ctx.send(f"Your character is named {name} with the stats {stats} and the weapon {weapon}. What armour will they start with?\n",
+                           embed=embed)
+            embed.clear_fields()
+            while True:
+                armour = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
+                armour = armour.content
+                if armour not in ["Leather Carapace", "Warrior's Mail", "Rusted Paladin's Armour"]:
+                    await ctx.send("That's not one of the specified starting armours.")
+                else:
+                    break
+
+            embed.add_field(name="Your character was added to KaeRPG!",
+                            value=f"{name} was just added to KaeRPG with the following stats:\n"
+                            f"{stats}\n"
+                            f"...and the following items:\n"
+                            f"{weapon}, {armour}\n"
+                            "You can now play KaeRPG. Use 'kaerpg beginnersguide' to learn how to play.",
+                            inline=False)
+
+            statdict = {}
+            stats = stats.split(" / ")
+            for stat in stats:
+                dlist = stat.split(" ")
+                statdict[dlist[0]] = dlist[1]
+
+            await bot.kaedb.execute("INSERT INTO kaerpg_characterinfo VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+                                    str(ctx.author.id), name, 1, 0, statdict, [weapon, armour], 0, {"armour": armour, "weapon": weapon})
+            await ctx.send(embed=embed)
+
+    @kaerpg.command(name="delcharacter", brief="Delete your KaeRPG character.",
+                    description="Delete your KaeRPG character permanently.")
+    async def delcharacter(self, ctx):
+        if await bot.kaedb.fetchrow("SELECT * FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)):
+            await ctx.send("Are you sure you want to delete your character? (y/n)")
+            while True:
+                check = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
+                check = check.content.lower()
+                if check == "y":
+                    await ctx.send("Deleting character from KaeDB...")
+                    await bot.kaedb.execute("DELETE FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id))
+                    return await ctx.send("Character deleted.")
+                elif check == "n":
+                    return await ctx.send("Character deletion cancelled.")
+                else:
+                    await ctx.send("Specify Y or N as an answer.")
+        else:
+            await ctx.send("You don't have a character to delete.")
+
+    @kaerpg.command(name="iteminfo", brief="Check an item.",
+                    description="View an item's information.")
     async def iteminfo(self, ctx, *, item: str):
-        embed = discord.Embed(
-            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        )
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=KAEBOT_VERSION)
         embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
-        try:
+        if item in KaeRPG.items["Weapons"].keys():  # If in weapon list:
             itemdict = KaeRPG.items["Weapons"][item]
             embedcontent = f"Rank: {itemdict['Rank']}\n"
             embedcontent += f"Damage: {itemdict['Damage']}\n"
@@ -610,7 +737,30 @@ class KaeRPG:
                             inline=False)
             await ctx.send(embed=embed)
 
-        except KeyError:
+        elif item in KaeRPG.items["Armour"].keys():  # If in armour list:
+            itemdict = KaeRPG.items["Armour"][item]
+            embedcontent = f"Rank: {itemdict['Rank']}\n"
+            embedcontent += f"Protection: {itemdict['Protection']}\n"
+            embedcontent += f"Type: {itemdict['Type']}\n"
+            embedcontent += f"Info: *{itemdict['Info']}*"
+
+            embed.add_field(name=item,
+                            value=embedcontent,
+                            inline=False)
+            await ctx.send(embed=embed)
+
+        elif item in KaeRPG.items["Consumables"]:  # If in consumables list:
+            itemdict = KaeRPG.items["Consumables"][item]
+            embedcontent = f"Value: {itemdict['Value']}\n"
+            embedcontent += f"Effect: {itemdict['Effect']}\n"
+            embedcontent += f"Info: *{itemdict['Info']}*"
+
+            embed.add_field(name=item,
+                            value=embedcontent,
+                            inline=False)
+            await ctx.send(embed=embed)
+
+        else:
             similaritems = difflib.get_close_matches(item, KaeRPG.items["Weapons"].keys(), n=5, cutoff=0.6)
             embedcontent = ""
             for similar in similaritems:
@@ -621,12 +771,83 @@ class KaeRPG:
                             inline=False)
             await ctx.send(embed=embed)
 
-    @kaerpg.command(name="itemlist", brief="List all items in KaeRPG.",
-                    description="List all items in KaeRPG (sorted by rank).")
-    async def itemlist(self, ctx):
-        embed = discord.Embed(
-            colour=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        )
+    @kaerpg.command(name="characterlist", brief="List all characters in KaeRPG.",
+                    description="List all of the characters registered in KaeRPG.")
+    async def characterlist(self, ctx):
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+
+        charlist = await bot.kaedb.fetch("SELECT * FROM kaerpg_characterinfo")
+        embedcontent = ""
+        for record in charlist:
+            embedcontent += f"{record['name']} | {bot.get_user(int(record['user_id'])).display_name} |"
+            embedcontent += f" {bot.get_user(int(record['user_id'])).id}\n"
+        embed.add_field(name="Character List",
+                        value=embedcontent,
+                        inline=False)
+        await ctx.send(embed=embed)
+
+    @kaerpg.command(name="characterinfo", brief="Get the character info of a user's character. Aliased to inventory.",
+                    description="Get character info of your or someone else's character. If a user is not"
+                                " specified, this command defaults to your character. Aliased to inventory.",
+                    aliases=["inventory"])
+    async def characterinfo(self, ctx, user: commands.MemberConverter=None):
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_thumbnail(url=ctx.author.avatar_url)
+
+        if user is None:
+            user = ctx.author
+        rawinfo = await bot.kaedb.fetchrow("SELECT * FROM kaerpg_characterinfo WHERE user_id = $1", str(user.id))
+        if rawinfo is None:  # No info exists, aka no character
+            return await ctx.send("This user doesn't have a KaeRPG character.")
+
+        stats = ""
+        for key, val in rawinfo['stats'].items():
+            stats += f"{key} {val} / "
+        stats = stats[:-3]
+        items = ""
+        for item in rawinfo['items']:
+            items += f"{item}, "
+        items = items[:-2]
+        kaecoins = rawinfo['kaecoins']
+        equipped = ""
+        for equipment in rawinfo['equipped'].values():
+            equipped += f"{equipment}, "
+        equipped = equipped[:-2]
+
+        embed.add_field(name=f"Character Information for {user.display_name}:",
+                        value=f"Character Name: {rawinfo['name']}\n"
+                        f"Level: {rawinfo['level']}\n"
+                        f"Current EXP: {rawinfo['exp']}\n"
+                        f"Stats: {stats}\n"
+                        f"Items: {items}\n"
+                        f"Equipped: {equipped}\n"
+                        f"KaeCoins: {kaecoins}",
+                        inline=False)
+        await ctx.send(embed=embed)
+
+    @kaerpg.command(name="dungeonlist", brief="Lists all dungeons in KaeRPG.",
+                    description="Lists all dungeons in KaeRPG.")
+    async def dungeonlist(self, ctx):
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embedcontent = ""
+        for dungeon in KaeRPG.dungeons:
+            embedcontent += f"{dungeon} (minimum level: {KaeRPG.dungeons[dungeon]['Minlevel']}, number of enemies:"
+            embedcontent += f" {KaeRPG.dungeons[dungeon]['Number of Enemies']}, number of bosses: {len(KaeRPG.dungeons[dungeon]['Bosses'])})\n"
+        embed.add_field(name="Dungeon List:",
+                        value=embedcontent,
+                        inline=False)
+        await ctx.send(embed=embed)
+
+    @kaerpg.command(name="weaponlist", brief="Lists all weapons in KaeRPG.",
+                    description="Lists all weapons in KaeRPG (sorted by rank).")
+    async def weaponlist(self, ctx):
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=KAEBOT_VERSION)
         embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
@@ -643,11 +864,11 @@ class KaeRPG:
         embed.add_field(name="Omega Rank:",
                         value=embedcontent["Omega"],
                         inline=False)
-        embed.add_field(name="Alpha Rank:",
-                        value=embedcontent["Alpha"],
-                        inline=False)
         embed.add_field(name="Beta Rank:",
                         value=embedcontent["Beta"],
+                        inline=False)
+        embed.add_field(name="Alpha Rank:",
+                        value=embedcontent["Alpha"],
                         inline=False)
         embed.add_field(name="S Rank:",
                         value=embedcontent["S"],
@@ -665,6 +886,120 @@ class KaeRPG:
                         value=embedcontent["D"],
                         inline=False)
         await ctx.send(embed=embed)
+
+    @kaerpg.command(name="armourlist", brief="Lists all armour in KaeRPG.",
+                    description="Lists all armour in KaeRPG (sorted by rank).")
+    async def armourlist(self, ctx):
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+
+        embedcontent = dict.fromkeys(["Omega", "Beta", "Alpha", "S", "A", "B", "C", "D"], "")
+        for item in KaeRPG.items["Armour"]:
+            embedcontent[KaeRPG.items["Armour"][item]['Rank']] += f"{item}, "
+
+        for rank, content in embedcontent.items():
+            if content.endswith(", "):
+                content = content[:-2]
+            content = content if content else "No items of this rank exist."
+            embedcontent[rank] = content
+
+        for key in embedcontent.keys():
+            embed.add_field(name=f"{key} Rank:",
+                            value=embedcontent[key],
+                            inline=False)
+
+        await ctx.send(embed=embed)
+
+    @kaerpg.command(name="equip", brief="Equip an item.",
+                    description="Equip an item from your KaeRPG inventory.")
+    async def equip(self, ctx, *, toequip: str):
+        player = await bot.kaedb.fetchrow("SELECT * FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id))
+        if player:
+            equipment = player['equipped']
+            equipment = equipment if equipment else {}
+
+            equippableweapons = []
+            equippablearmour = []
+            for item in player['items']:
+                if item in KaeRPG.items["Weapons"]:
+                    equippableweapons.append(item)
+                elif item in KaeRPG.items["Armour"]:
+                    equippablearmour.append(item)
+
+            if toequip in equippableweapons:
+                equipment["weapon"] = toequip
+            elif toequip in equippablearmour:
+                equipment["armour"] = toequip
+            else:
+                return await ctx.send("That is not a valid, equippable item (is it in your inventory)?")
+
+            await bot.kaedb.execute("UPDATE kaerpg_characterinfo SET equipped = ($1) WHERE user_id = $2", equipment, str(ctx.author.id))
+            await ctx.send(f"Equipped {toequip}.")
+
+        else:
+            await ctx.send("You don't have a character. Use 'prefix kaerpg makecharacter' to make one.")
+
+    @kaerpg.command(name="raid", brief="Raid a dungeon!",
+                    description="Raid a dungeon!")
+    async def raid(self, ctx, *, dungeon: str):
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
+        embed.set_footer(text=KAEBOT_VERSION)
+        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+
+        if await bot.kaedb.fetchrow("SELECT * FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)):
+            player = await bot.kaedb.fetchrow("SELECT * FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id))
+            try:  # Test this dungeon exists
+                KaeRPG.dungeons[dungeon]
+            except KeyError:
+                return await ctx.send("That's not a KaeRPG dungeon.")
+            if KaeRPG.dungeons[dungeon]['Minlevel'] > (await bot.kaedb.fetchrow("SELECT level FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)))['level']:
+                return await ctx.send(f"Your level is too low for this dungeon (required level: {KaeRPG.dungeons[dungeon]['Minlevel']}).")
+            embed.add_field(name=f"Starting a Raid on {dungeon}!",
+                            value="Raid starting in 10 seconds...",
+                            inline=False)
+            await ctx.send(embed=embed)
+            embed.clear_fields()
+            await asyncio.sleep(10)
+
+            actions = ["strike", "guard", "flee", "item"]
+            for enemyindex in range(0, KaeRPG.dungeons[dungeon]["Number of Enemies"]):
+                enemy = random.choice(KaeRPG.dungeons[dungeon]["Enemies"])
+                playerhp = float(player['stats']['CON']) * 2 - (float(player['stats']['CON']) * 0.05)
+                playermaxhp = playerhp
+                enemyhp = KaeRPG.enemies[enemy]["Health"]
+                enemymaxhp = enemyhp
+                turn = 1
+
+                embed.add_field(name=f"Enemy {enemyindex + 1} of {dungeon}:",
+                                value=f"{enemy}",
+                                inline=False)
+                await ctx.send(embed=embed)
+                embed.clear_fields()
+
+                while True:
+                    embed.add_field(name=f"Turn {turn}: You're fighting {enemy} ({enemyhp}/{enemymaxhp}HP).",
+                                    value=f"{player} health: {playerhp}/{playermaxhp}HP.\nActions:\n"
+                                    f"Strike, Guard, Flee, Item",
+                                    inline=False)
+                    await ctx.send(embed=embed)
+                    embed.clear_fields()
+
+                    action = await bot.wait_for("message",
+                                                check=lambda m: m.author == ctx.author and m.channel == ctx.channel and m.content.lower() in actions)
+                    action = action.content.lower()
+                    assert action in actions
+                    if action == "strike":
+                        pass
+                    elif action == "guard":
+                        pass
+                    elif action == "flee":
+                        pass
+                    elif action == "item":
+                        pass
+
+        else:
+            await ctx.send("You don't have a character to raid this dungeon with! Use 'prefix kaerpg makecharacter'.")
 
 
 bot.add_cog(BotOwner())

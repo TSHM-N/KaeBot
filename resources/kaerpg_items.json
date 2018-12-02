@@ -17,7 +17,7 @@
             "Scaling": {
                 "STR": "D",
                 "DEX": "B",
-                "PRE": "B",
+                "PRE": "C",
                 "ARC": "N/A"
             },
             "Info": "A makeshift shiv McGuyvered together from a sharp rock, a stick and some twine."
@@ -32,6 +32,17 @@
                 "ARC": "N/A"
             },
             "Info": "A self-made bow used by an amateur hunter."
+        },
+        "Tattered Scroll": {
+            "Rank": "D",
+            "Damage": 13,
+            "Scaling": {
+                "STR": "D",
+                "DEX": "C",
+                "PRE": "B",
+                "ARC": "A"
+            },
+            "Info": "Though burnt and barely decipherable, the faintest aura of arcane energy clings to this scroll."
         },
         "Worldcarver Scythe": {
             "Rank": "Omega",
@@ -101,7 +112,7 @@
         },
         "Voodoo Glove": {
             "Rank": "Alpha",
-            "Damage": 666,
+            "Damage": 700,
             "Scaling": {
                 "STR": "D",
                 "DEX": "A",
@@ -131,6 +142,88 @@
                 "ARC": "C"
             },
             "Info": "A rare sword made out of various strong metals. Used by many great travellers over the years.\nSome people say the sword holds greater potential than what it seems."
+        },
+        "Assassin's Blade": {
+            "Rank": "S",
+            "Damage": 610,
+            "Scaling": {
+                "STR": "C",
+                "DEX": "A",
+                "PRE": "A",
+                "ARC": "N/A"
+            },
+            "Info": "You feel a rush of exhilaration holding this weapon, like you could fall from the sky and come out unscathed."
+        },
+        "Gun That Can Kill The Past": {
+            "Rank": "Alpha",
+            "Damage": 720,
+            "Scaling": {
+                "STR": "D",
+                "DEX": "A",
+                "PRE": "A",
+                "ARC": "B"
+            },
+            "Info": "What is this, a crossover episode?"
+        },
+        "Mundane Sword": {
+            "Rank": "C",
+            "Damage": 59,
+            "Scaling": {
+                "STR": "C",
+                "DEX": "C",
+                "PRE": "C",
+                "ARC": "N/A"
+            },
+            "Info": "This sword is completely normal. Still, it does the job well."
+        },
+        "Flintlock Pistol": {
+            "Rank": "C",
+            "Damage": 62,
+            "Scaling": {
+                "STR": "D",
+                "DEX": "B",
+                "PRE": "B",
+                "ARC": "N/A"
+            },
+            "Info": "An old pistol, rusted from decades of disrepair and abandonment."
+        },
+        "Mana Breaker": {
+            "Rank": "Omega",
+            "Damage": 1500,
+            "Scaling": {
+                "STR": "A",
+                "DEX": "C",
+                "PRE": "C",
+                "ARC": "N/A"
+            },
+            "Info": "A large, clunky sword with edges that seem to ripple around reality."
+        }
+    },
+    "Armour": {
+        "Leather Carapace": {
+            "Rank": "D",
+            "Protection": 5,
+            "Type": "Light",
+            "Info": "Plain old leather armour. Not constricting, but lacks in physical defense and integrity."
+        },
+        "Warrior's Mail": {
+            "Rank": "D",
+            "Protection": 10,
+            "Type": "Medium",
+            "Info": "Just the right weight to let you charge into battle while being decently protected."
+        },
+        "Rusted Paladin's Armour": {
+            "Rank": "D",
+            "Protection": 15,
+            "Type": "Heavy",
+            "Info": "Heavy iron plating, marred by decades of rust, weighs down upon your shoulders when you wear this."
+        }
+    },
+    "Consumables": {
+        "Lesser Health Potion": {
+            "Value": "2KC",
+            "Effect": "PLAYER HP +20",
+            "Info": "A weak health potion brewed by an amateur alchemist. Heals you for 20HP upon usage."
         }
     }
 }

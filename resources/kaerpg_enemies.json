@@ -1,0 +1,37 @@
+{
+    "Dungeons": {
+        "Goblin Cave": {
+            "Enemies": ["Goblin", "Hobgoblin", "Goblin Thief"],
+            "Number of Enemies": 3,
+            "Minlevel": 1,
+            "Bosses": ["Breaker Goblin"]
+        }
+    },
+
+    "Enemies": {
+        "Goblin": {
+            "Health": 14,
+            "Resistance": 2,
+            "Damage": 3,
+            "Info": "A common goblin. Crafty and found almost everywhere in the world. A couple of swings to the head finishes them off quickly."
+        },
+        "Hobgoblin": {
+            "Health": 17,
+            "Resistance": 5,
+            "Damage": 6,
+            "Info": "A slightly stronger variant of the goblin, but only slightly. You might need an extra swing to the head for this one."
+        },
+        "Goblin Thief": {
+            "Health": 9,
+            "Resistance": 3,
+            "Damage": 10,
+            "Info": "The 'glass cannon' of goblins. More hard-hitting than its regular counterparts, but also much weaker."
+        },
+        "Breaker Goblin": {
+            "Health": 30,
+            "Resistance": 8,
+            "Damage": 10,
+            "Info": "A stronger variant of the goblin. Tread with caution: this enemy is the bane of new adventurers."
+        }
+    }
+}
