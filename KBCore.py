@@ -33,7 +33,6 @@ async def prefix(instance, msg):
         prefixes.append(dict(record)["prefix"])
     return prefixes
 
-
 bot = commands.Bot(description=f"Made by TSHMN. Version: {KAEBOT_VERSION}", command_prefix=prefix,
                    activity=discord.Streaming(name="TSHMN's bot | Default prefix: kae", url="https://twitch.tv/monky"))
 
@@ -498,10 +497,10 @@ class Seasonal:
 
 
 class KaeRPG:
-    with open("resources/kaerpg_items.json", "r") as f:
+    with open("resources/kaerpg/kaerpg_items.json", "r") as f:
         items = json.load(f)
 
-    with open("resources/kaerpg_enemies.json", "r") as f:
+    with open("resources/kaerpg/kaerpg_enemies.json", "r") as f:
         dungeons = json.load(f)["Dungeons"]
         f.seek(0)
         enemies = json.load(f)["Enemies"]
