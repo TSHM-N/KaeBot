@@ -61,7 +61,7 @@
             "Health": 10,
             "Resistance": 1,
             "Damage": 12,
-            "Info": "An threat that goes unseen unless you look hard enough. Its head mimics a razor-sharp grass tuft."
+            "Info": "A threat that goes unseen unless you look hard enough. Its head mimics a razor-sharp grass tuft."
         },
         "Water Elemental": {
             "Health": 46,
@@ -85,7 +85,7 @@
             "Health": 30,
             "Resistance": 4,
             "Damage": 9,
-            "Info": "A glowing spirit that roams the jungles."
+            "Info": "A glowing spirit that roams the jungles. It zaps passerby adventurers with magic essence."
          },
         "Overgrown Treant": {
             "Health": 46,
