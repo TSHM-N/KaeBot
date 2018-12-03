@@ -1,28 +1,25 @@
 import discord
 from discord.ext import commands
-import logging, pickle, os, random, asyncio, aiohttp, asyncpg, bs4, datetime, difflib, re, json, aioconsole, tabulate
-import sys
+import logging, os, random, asyncio, aiohttp, asyncpg, bs4, datetime, difflib, re, json
 
 # Made by TSHMN
 
 KAEBOT_VERSION = "KaeBot Alpha"
 logging.basicConfig(level=logging.INFO)
 discord.opus.load_opus("libopus-0.x64.dll")
-
-PAFYKEY = pickle.load(open("pafyapikey.kae", "rb"))
-TOKEN = pickle.load(open("token.kae", "rb"))
-with open("geniusapiinfo.kae", "rb") as f:
-    genius_info = pickle.load(f)
-    GENIUS_CLIENTID = genius_info["client_id"]
-    GENIUS_CLIENTSECRET = genius_info["client_secret"]
-    GENIUS_CLIENTTOKEN = genius_info["client_access_token"]
-
 strcommands = []
-with open("dbinfo.json", "r") as f:
-    psqluser = json.load(f)["user"]
-    f.seek(0)
-    psqlpass = json.load(f)["pass"]
-    credentials = {"user": psqluser, "password": psqlpass, "database": "kaebot", "host": "127.0.0.1"}
+
+with open("resources/kaeinfo.json", "r") as f:
+    data = json.load(f)
+    TOKEN = data["discordtoken"]
+    PAFYKEY = data["pafykey"]
+    GENIUS_CLIENTID = data["geniusclientid"]
+    GENIUS_CLIENTSECRET = data["geniusclientsecret"]
+    GENIUS_CLIENTTOKEN = data["geniusclienttoken"]
+    PSQLUSER = data["psqluser"]
+    PSQLPASS = data["psqlpass"]
+
+credentials = {"user": PSQLUSER, "password": PSQLPASS, "database": "kaebot", "host": "127.0.0.1"}
 os.system("cls")
 print(f"Starting {KAEBOT_VERSION}...")
 
@@ -48,22 +45,12 @@ async def poolinit(con):
 @bot.event
 async def on_ready():
     print(f"{KAEBOT_VERSION} up and running on botuser {KAEBOT_VERSION}.")
-    print(f"Running on {len(bot.guilds)}")
+    print(f"Running on {len(bot.guilds)} guilds.")
     for command in bot.commands:
         strcommands.append(str(command))
     print("Initialised strcommands.")
-    bot.kaedb = await asyncpg.create_pool(
-        **credentials,
-        max_inactive_connection_lifetime=5,
-        init=poolinit
-    )
+    bot.kaedb = await asyncpg.create_pool(**credentials, max_inactive_connection_lifetime=5, init=poolinit)
     print(f"Connection to database established: {bot.kaedb}")
-    while True:
-        consoleinput = await aioconsole.ainput("KaeBot> ")
-        try:
-            eval(consoleinput)
-        except Exception as e:
-            print(e)
 
 
 @bot.event
@@ -541,12 +528,14 @@ class KaeRPG:
             rawdamageboost += val * int(characterstats[key])
 
         critboost = 1.5 if random.random() > 0.95 else 1
-        fluctuation = random.uniform(weapondamage + rawdamageboost * -0.9, weapondamage + rawdamageboost * 0.9)
-        return round(((weapondamage + rawdamageboost) * critboost + fluctuation) / enemyresistance)
+        fluctuation = random.uniform(weapondamage + rawdamageboost * -0.3, weapondamage + rawdamageboost * 0.3)
+        finaldamage = round(((weapondamage + rawdamageboost) * critboost + fluctuation) - enemyresistance)
+        return finaldamage if finaldamage >= 0 else 0
 
     @staticmethod
     async def enemydamagecalc(self, enemydamage: int, playerprotection: int):
-        return round(enemydamage + random.uniform(enemydamage * 0.2, enemydamage * 0.5) - playerprotection - (playerprotection * 0.6))
+        finaldamage = round(enemydamage + random.uniform(enemydamage * 0.2, enemydamage * 0.5) - playerprotection - (playerprotection * 0.6))
+        return finaldamage if finaldamage >= 0 else 0
 
     @staticmethod
     async def levelup(self, ctx):
