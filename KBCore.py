@@ -609,11 +609,11 @@ class KaeRPG:
                     await ctx.send("That name is too long (>10 characters). Try again.")
 
             statspecs = {
-                "1": "STR 15 / DEX 12 / PRE 10 / ARC 8 / CON 13 / AGI 8",
-                "2": "STR 8 / DEX 15 / PRE 12 / ARC 8 / CON 10 / AGI 10",
-                "3": "STR 10 / DEX 12 / PRE 15 / ARC 8 / CON 8 / AGI 10",
-                "4": "STR 20 / DEX 8 / PRE 8 / ARC 8 / CON 8 / AGI 8",
-                "5": "STR 10 / DEX 10 / PRE 12 / ARC 15 / CON 8 / AGI 12",
+                "1": "STR 14 / DEX 12 / PRE 10 / ARC 8 / CON 13 / AGI 8",
+                "2": "STR 8 / DEX 16 / PRE 11 / ARC 8 / CON 10 / AGI 12",
+                "3": "STR 10 / DEX 12 / PRE 16 / ARC 10 / CON 8 / AGI 9",
+                "4": "STR 21 / DEX 10 / PRE 8 / ARC 9 / CON 8 / AGI 9",
+                "5": "STR 8 / DEX 9 / PRE 12 / ARC 16 / CON 8 / AGI 12",
             }
             for key in statspecs.keys():
                 embed.add_field(name=key,
