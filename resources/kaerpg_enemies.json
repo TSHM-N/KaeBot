@@ -12,25 +12,29 @@
         "Goblin": {
             "Health": 14,
             "Resistance": 2,
-            "Damage": 3,
+            "Damage": 4,
+            "Agility": 7,
             "Info": "A common goblin. Crafty and found almost everywhere in the world. A couple of swings to the head finishes them off quickly."
         },
         "Hobgoblin": {
             "Health": 17,
             "Resistance": 5,
             "Damage": 6,
+            "Agility": 11,
             "Info": "A slightly stronger variant of the goblin, but only slightly. You might need an extra swing to the head for this one."
         },
         "Goblin Thief": {
             "Health": 9,
             "Resistance": 3,
-            "Damage": 10,
-            "Info": "The 'glass cannon' of goblins. More hard-hitting than its regular counterparts, but also much weaker."
+            "Damage": 8,
+            "Agility": 16,
+            "Info": "The 'glass cannon' of goblins. More hard-hitting and speedier than its regular counterparts, but also much weaker."
         },
         "Breaker Goblin": {
             "Health": 30,
             "Resistance": 8,
-            "Damage": 10,
+            "Damage": 11,
+            "Agility": 20,
             "Info": "A stronger variant of the goblin. Tread with caution: this enemy is the bane of new adventurers."
         }
     }

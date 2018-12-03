@@ -543,8 +543,15 @@ class KaeRPG:
         return round(((weapondamage + rawdamageboost) * critboost + fluctuation) / enemyresistance)
 
     @staticmethod
-    async def enemydamagecalc(self, enemydamage: int):
-        return round(enemydamage + random.uniform(enemydamage * -0.9, enemydamage * 0.9))
+    async def enemydamagecalc(self, enemydamage: int, playerprotection: int):
+        return round(enemydamage + random.uniform(enemydamage * 0.2, enemydamage * 0.5) - playerprotection - (playerprotection * 0.6))
+
+    @staticmethod
+    async def levelup(self, ctx):
+        currentlevel = (await bot.kaedb.fetch("SELECT level FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)))[0]["level"]
+        await ctx.send(currentlevel)
+        await bot.kaedb.execute("UPDATE kaerpg_characterinfo SET level = $1 WHERE user_id = $2", currentlevel + 1, str(ctx.author.id))
+        await ctx.send(f"You levelled up! You are now level {currentlevel + 1}.")
 
     @commands.group(name="kaerpg", brief="A command group for every KaeRPG command. Aliased to kr.",
                     description="A command group for every KaeRPG command. Aliased to kr.", aliases=["kr"])
@@ -956,22 +963,27 @@ class KaeRPG:
             if KaeRPG.dungeons[dungeon]['Minlevel'] > (await bot.kaedb.fetchrow("SELECT level FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)))['level']:
                 return await ctx.send(f"Your level is too low for this dungeon (required level: {KaeRPG.dungeons[dungeon]['Minlevel']}).")
             embed.add_field(name=f"Starting a Raid on {dungeon}!",
-                            value="Raid starting in 10 seconds...",
+                            value="Raid starting in 5 seconds...",
                             inline=False)
             await ctx.send(embed=embed)
             embed.clear_fields()
-            await asyncio.sleep(10)
+            await asyncio.sleep(5)
 
             actions = ["strike", "guard", "flee", "item"]
-            for enemyindex in range(0, KaeRPG.dungeons[dungeon]["Number of Enemies"]):
+            usable = []
+            for item in player["items"]:
+                if item in KaeRPG.items["Consumables"]:
+                    usable.append(item)
+            playerhp = float(player['stats']['CON']) * 2 - (float(player['stats']['CON']) * 0.05)
+            playermaxhp = playerhp
+
+            for enemyindex in range(1, KaeRPG.dungeons[dungeon]["Number of Enemies"] + 1):
                 enemy = random.choice(KaeRPG.dungeons[dungeon]["Enemies"])
-                playerhp = float(player['stats']['CON']) * 2 - (float(player['stats']['CON']) * 0.05)
-                playermaxhp = playerhp
                 enemyhp = KaeRPG.enemies[enemy]["Health"]
                 enemymaxhp = enemyhp
                 turn = 1
 
-                embed.add_field(name=f"Enemy {enemyindex + 1} of {dungeon}:",
+                embed.add_field(name=f"Enemy {enemyindex} of {dungeon}:",
                                 value=f"{enemy}",
                                 inline=False)
                 await ctx.send(embed=embed)
@@ -979,7 +991,7 @@ class KaeRPG:
 
                 while True:
                     embed.add_field(name=f"Turn {turn}: You're fighting {enemy} ({enemyhp}/{enemymaxhp}HP).",
-                                    value=f"{player} health: {playerhp}/{playermaxhp}HP.\nActions:\n"
+                                    value=f"{player['name']}'s health: {playerhp:.2f}/{playermaxhp}HP.\nActions:\n"
                                     f"Strike, Guard, Flee, Item",
                                     inline=False)
                     await ctx.send(embed=embed)
@@ -989,14 +1001,38 @@ class KaeRPG:
                                                 check=lambda m: m.author == ctx.author and m.channel == ctx.channel and m.content.lower() in actions)
                     action = action.content.lower()
                     assert action in actions
-                    if action == "strike":
-                        pass
-                    elif action == "guard":
-                        pass
-                    elif action == "flee":
-                        pass
-                    elif action == "item":
-                        pass
+
+                    if int(player["stats"]["AGI"]) > KaeRPG.enemies[enemy]["Agility"]:
+                        if action == "strike":
+                            pass
+                        elif action == "guard":
+                            pass
+                        elif action == "flee":
+                            return await ctx.send("You fled the dungeon like a coward.")
+                        elif action == "item":
+                            pass
+
+                        turndamagetaken = round(await KaeRPG.enemydamagecalc(self, KaeRPG.enemies[enemy]["Damage"], KaeRPG.items["Armour"][player["equipped"]["armour"]]["Protection"]), 2)
+                        playerhp -= turndamagetaken
+                        round(playerhp, 2)
+                        if playerhp <= 0:
+                            return await ctx.send(f"The {enemy} smites you dead with a final blow worth "
+                                                  f"{turndamagetaken:.2f}HP.\n Dungeon failed...")
+                        else:
+                            await ctx.send(f"{enemy} strikes you for {turndamagetaken:.2f}HP, leaving you with {playerhp:.2f}HP.")
+
+                    else:
+                        turndamagetaken = round(await KaeRPG.enemydamagecalc(self, KaeRPG.enemies[enemy]["Damage"], KaeRPG.items["Armour"][player["equipped"]["armour"]]["Protection"]), 2)
+                        playerhp -= turndamagetaken
+                        round(playerhp, 2)
+                        if playerhp <= 0:
+                            return await ctx.send(f"The {enemy} smites you dead with a final blow worth "
+                                                  f"{turndamagetaken:.2f}HP.\nDungeon failed...")
+                        else:
+                            await ctx.send(f"{enemy} strikes you for {turndamagetaken:.2f}HP, leaving you with {playerhp:.2f}HP.")
+
+                    turn += 1
+                # await ctx.send(f"You killed {enemy}.")
 
         else:
             await ctx.send("You don't have a character to raid this dungeon with! Use 'prefix kaerpg makecharacter'.")
