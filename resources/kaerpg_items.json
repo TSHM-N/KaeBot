@@ -223,6 +223,18 @@
             "Protection": 7,
             "Type": "Light",
             "Info": "It reeks of sweaty Goblin, but is hardened with natural material and leather."
+        },
+        "Damp Muddy Chestplate": {
+            "Rank": "D",
+            "Protection": 12,
+            "Type": "Medium",
+            "Info": "It was probably an actual chestplate, but its too hard to tell."
+        },
+        "Treant Bark": {
+            "Rank": "D",
+            "Protection": 18,
+            "Type": "Heavy",
+            "Info": "Poor treant. Everything about this screams: splinters."
         }
     },
     "Consumables": {
