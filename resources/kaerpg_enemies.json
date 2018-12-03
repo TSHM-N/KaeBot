@@ -46,61 +46,70 @@
             "Health": 30,
             "Resistance": 8,
             "Damage": 11,
-            "Agility": 20,
+            "Agility": 15,
             "Info": "A stronger variant of the goblin. Tread with caution: this enemy is the bane of new adventurers."
         },
         "Blue Slime": {
             "Health": 24,
             "Resistance": 5,
             "Damage": 3,
+            "Agility": 8,
             "Info": "A seemingly harmless creature. These slimes can soak up a few hits."
         },
         "Massive Toad": {
             "Health": 20,
             "Resistance": 3,
             "Damage": 7,
+            "Agility": 10,
             "Info": "An abnormally massive toad. It resembles a fungal balloon."
         },
         "Living Tuft": {
             "Health": 10,
             "Resistance": 1,
             "Damage": 12,
+            "Agility": 15,
             "Info": "A threat that goes unseen unless you look hard enough. Its head mimics a razor-sharp grass tuft."
         },
         "Water Elemental": {
             "Health": 46,
             "Resistance": 10,
             "Damage": 9,
+            "Agility": 12,
             "Info": "It hits with overwhelming tidal power. Its water-like body allows it to morph to take less damage from attacks."
         },
         "Treant": {
             "Health": 34,
             "Resistance": 5,
             "Damage": 7,
+            "Agility": 7,
             "Info": "A common enemy in the jungle that resembles a sentient tree."
         },
         "Enraged Monkey": {
             "Health": 26,
             "Resistance": 2,
             "Damage": 14,
+            "Agility": 14,
             "Info": "You probably did something wrong."
         },
         "Pixie": {
             "Health": 30,
             "Resistance": 4,
             "Damage": 9,
+            "Agility": 11,
             "Info": "A glowing spirit that roams the jungles. It zaps passerby adventurers with magic essence."
          },
         "Overgrown Treant": {
             "Health": 46,
             "Resistance": 8,
             "Damage": 6,
+            "Agility": 7,
             "Info": "A bigger counterpart of the treant. It takes more hits but doesn't hit as hard."
          },
         "Totem Golem": {
             "Health": 74,
             "Resistance": 12,
             "Damage": 18,
+            "Agility": 5,
             "Info": "An ancient being of the jungle that guards the monument. It is slow moving but has overwhelming strength."
         }
     }
