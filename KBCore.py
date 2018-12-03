@@ -24,7 +24,7 @@ with open("dbinfo.json", "r") as f:
     psqlpass = json.load(f)["pass"]
     credentials = {"user": psqluser, "password": psqlpass, "database": "kaebot", "host": "127.0.0.1"}
 os.system("cls")
-print("Starting {}...".format(KAEBOT_VERSION))
+print(f"Starting {KAEBOT_VERSION}...")
 
 
 async def prefix(instance, msg):
@@ -38,7 +38,7 @@ async def prefix(instance, msg):
     return prefixes
 
 
-bot = commands.Bot(description="Made by TSHMN. Version: {0}".format(KAEBOT_VERSION), command_prefix=prefix,
+bot = commands.Bot(description=f"Made by TSHMN. Version: {KAEBOT_VERSION}", command_prefix=prefix,
                    activity=discord.Streaming(name="TSHMN's bot | Default prefix: kae", url="https://twitch.tv/monky"))
 
 
@@ -48,8 +48,8 @@ async def poolinit(con):
 
 @bot.event
 async def on_ready():
-    print("{0} up and running on botuser {1}.".format(KAEBOT_VERSION, bot.user))
-    print("Running on {} guilds.".format(len(bot.guilds)))
+    print(f"{KAEBOT_VERSION} up and running on botuser {KAEBOT_VERSION}.")
+    print(f"Running on {len(bot.guilds)}")
     for command in bot.commands:
         strcommands.append(str(command))
     print("Initialised strcommands.")
@@ -58,7 +58,7 @@ async def on_ready():
         max_inactive_connection_lifetime=5,
         init=poolinit
     )
-    print("Connection to database established: {}".format(bot.kaedb))
+    print(f"Connection to database established: {bot.kaedb}")
     while True:
         consoleinput = await aioconsole.ainput("KaeBot> ")
         try:
@@ -74,13 +74,13 @@ async def on_guild_join(guild):
         embed.set_footer(text=KAEBOT_VERSION)
         embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
         embed.add_field(name="Hey there, I'm KaeBot!",
-                        value="Hi! I'm KaeBot, a **discord.py** bot written by TSHMN (and aliases).\n"
-                              "I currently have {} commands available to use; type 'kae help' to see them!\n"
-                              "If you want to change my prefix, use 'kae prefix add'.\n Have fun!".format(len(bot.commands)),
+                        value=f"Hi! I'm KaeBot, a **discord.py** bot written by TSHMN (and aliases).\n"
+                              "I currently have {len(bot.commands))} commands available to use; type 'kae help' to see them!\n"
+                              "If you want to change my prefix, use 'kae prefix add'.\n Have fun!",
                         inline=False)
         await guild.system_channel.send(embed=embed)
 
-    await bot.kaedb.execute("INSERT INTO server_prefixes VALUES ({}, 'kae ')".format(guild.id))
+    await bot.kaedb.execute("INSERT INTO server_prefixes VALUES ($1, 'kae ')", str(guild.id))
 
 
 @bot.event
@@ -113,7 +113,7 @@ class ErrorHandler:
                 similarstr = "No matches found."
             else:
                 for simstr in similar:
-                    similarstr += "{}\n".format(simstr)
+                    similarstr += f"{simstr}\n"
 
             embed.add_field(name="Invalid command. Did you mean:",
                             value=similarstr,
@@ -162,7 +162,7 @@ class Administrator:
     async def prefix(self, ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
-            embed.set_footer(text="{} | Subcommands: add, remove".format(KAEBOT_VERSION))
+            embed.set_footer(text=f"{KAEBOT_VERSION} | Subcommands: add, remove")
             embedcontent = ""
 
             result = await bot.kaedb.fetch(
@@ -170,9 +170,9 @@ class Administrator:
                 str(ctx.guild.id)
             )
             for record in result:
-                embedcontent += "{}command\n".format(dict(record)["prefix"])
+                embedcontent += f"{dict(record)['prefix']}command\n"
 
-            embed.add_field(name="Prefixes for {}:".format(ctx.guild.name),
+            embed.add_field(name=f"Prefixes for {ctx.guild.name}:",
                             value=embedcontent,
                             inline=False)
             await ctx.send(embed=embed)
@@ -184,7 +184,7 @@ class Administrator:
             if newprefix.startswith("'") and newprefix.endswith("'"):
                 newprefix = newprefix[1: -1]
                 await bot.kaedb.execute("INSERT INTO server_prefixes VALUES ($1, $2)", str(ctx.guild.id), newprefix)
-                await ctx.send("Added '{}' as a prefix.".format(newprefix))
+                await ctx.send(f"Added '{newprefix}' as a prefix.")
             else:
                 await ctx.send("Bad input! Make sure you enclose your new prefix in single quotes like so: `'kae '`.")
         else:
@@ -197,7 +197,7 @@ class Administrator:
             if todelete.startswith("'") and todelete.endswith("'"):
                 todelete = todelete[1: -1]
                 await bot.kaedb.execute("DELETE FROM server_prefixes WHERE server_id = $1 AND prefix = $2", str(ctx.guild.id), todelete)
-                await ctx.send("Deleted the '{}' prefix.".format(todelete))
+                await ctx.send(f"Deleted the '{todelete}' prefix.")
             else:
                 await ctx.send("Bad input! Make sure you enclose the prefix in single quotes like so: `'kae '`.")
         else:
@@ -208,14 +208,13 @@ class Moderator:
     @commands.command(name="kick", brief="Kicks a user.",
                       description="Kicks a specified user. Only usable by users with the Kick Members permission.")
     async def kick(self, ctx, user: discord.Member, *, reason=""):
-        print("Attempted kick by {0}. Target: {1}".format(ctx.message.author, user))
+        print(f"Attempted kick by {ctx.message.author}. Target: {user}")
         if ctx.message.author.guild_permissions.kick_members:
-            await user.send(content="You have been kicked from {0} by {1}.".format(ctx.message.guild,
-                                                                                   ctx.message.author))
+            await user.send(content=f"You have been kicked from {ctx.message.guild} by {ctx.message.author}.")
             if not reason == "":
-                await user.send(content="Reason: '{0}'".format(reason))
+                await user.send(content=f"Reason: '{reason}'")
             await user.kick(reason=reason)
-            await ctx.send("{0} has been kicked.".format(user))
+            await ctx.send(f"{user} has been kicked.")
             print("Kick successful.")
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nKick Members\n```")
@@ -224,28 +223,27 @@ class Moderator:
     @commands.command(name="ban", brief="Bans a user.",
                       description="Bans a specified user. Only usable by users with the Ban Members permission.")
     async def ban(self, ctx, user: discord.Member, *, reason=""):
-        print("Attempted ban by {0}. Target: {1}".format(ctx.message.author, user))
+        print(f"Attempted ban by {ctx.message.author}. Target: {user}")
         if ctx.message.author.guild_permissions.ban_members:
-            await user.send(content="You have been banned from {0} by {1}.".format(ctx.message.guild,
-                                                                                   ctx.message.author))
+            await user.send(content=f"You have been banned from {ctx.message.guild} by {ctx.message.author}.")
             if not reason == "":
-                await user.send(content="Reason: '{0}'".format(reason))
+                await user.send(content=f"Reason: '{reason}'")
             await user.ban(reason=reason, delete_message_days=0)
-            await ctx.send("{0} has been banned. Their ID: {1}".format(user, user.id))
+            await ctx.send(f"{user} has been banned. Their ID: {user.id}")
             print("Ban successful.")
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nBan Members\n```")
             print("Ban denied due to bad perms.")
 
-    @commands.command(name="unban", brief="Unbans a user.",
+    @commands.command(name="unban", brief="Unbans a user through their ID.",
                       description="Unbans a specified user through their ID. Only usable by users with the Ban Members"
                                   " permission.")
     async def unban(self, ctx, user: int):
-        print("Attempted ban by {0}. Target: {1}".format(ctx.message.author, user))
+        print(f"Attempted ban by {ctx.message.author}. Target: {user}")
         if ctx.message.author.guild_permissions.ban_members:
             true_user = bot.get_user(user)
             await ctx.message.guild.unban(true_user)
-            await ctx.send("{} unbanned.".format(true_user))
+            await ctx.send(f"{true_user} unbanned.")
             print("Unban successful.")
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nBan Members\n```")
@@ -258,7 +256,7 @@ class Miscellaneous:
                                   "'start <= n <= end'. Only accepts int arguments.")
     async def random(self, ctx, start: int, end: int):
         r = random.randint(start, end)
-        await ctx.send("Your number is: {}.".format(r))
+        await ctx.send(f"Your number is: {r}.")
 
     @commands.command(name="russianroulette", brief="Play a quick game of Russian Roulette.",
                       description="Play a game of Russian Roulette.\n Choose the number of bullets in your barrel "
@@ -293,8 +291,7 @@ class Miscellaneous:
                     await ctx.send("Sorry chief, but you died! You have five seconds to say your goodbyes before you"
                                    " get banned.")
                     await asyncio.sleep(5)
-                    await ctx.send("{0} has been banned. Their ID: {1}".format(ctx.message.author,
-                                                                               ctx.message.author.id))
+                    await ctx.send(f"{ctx.message.author} has been banned. Their ID: {ctx.message.author.id}")
                     await ctx.message.author.ban(reason="You failed Ban Roulette.", delete_message_days=0)
                 else:
                     await ctx.send("You survived Ban Roulette! Nice job.")
@@ -311,10 +308,9 @@ class Miscellaneous:
     @commands.command(name="slap", brief="Slap someone!", description="Slap someone!")
     async def slap(self, ctx, user: discord.Member, *, reason: str=""):
         if reason:
-            await ctx.send("{0} just got slapped by {1}! Reason: '{2}'.".format(user.mention,
-                                                                                ctx.message.author.mention, reason))
+            await ctx.send(f"{user.mention} just got slapped by {ctx.message.author.mention}! Reason: '{reason}'.")
         else:
-            await ctx.send("{0} just got slapped by {1}!".format(user.mention, ctx.message.author.mention))
+            await ctx.send(f"{ctx.message.author.mention} just got slapped by {user.mention}!")
 
     @commands.command(name="getinvite", brief="Invite KaeBot to your server.",
                       description="Gets two invites (one with admin permissions, and one without) that allows you"
@@ -353,12 +349,12 @@ class Miscellaneous:
                 await ctx.send("Rift closed.")
                 break
             else:
-                await targetchannel.send("{} speaks from a rift: '{}'".format(ctx.author.name, message.content))
+                await targetchannel.send(f"{ctx.author.name} speaks from a rift: '{message.content}'")
 
     @commands.command(name="ping", brief="Pong!",
                       description="Pings the bot and gets websocket latency.")
     async def ping(self, ctx):
-        await ctx.send("Pong! Latency: {}ms".format(round(bot.latency * 1000, 2)))
+        await ctx.send(f"Pong! Latency: {bot.latency * 1000:.2f}ms")
 
     @commands.command(name="countdown", brief="Start a countdown to 0 (30 seconds max).",
                       description="Start a countdown going down to 0. The maximum start value is 30 seconds.")
@@ -394,7 +390,7 @@ class Genius:
             colour=discord.Color.from_rgb(81, 0, 124)
         )
         embed.set_footer(text=KAEBOT_VERSION)
-        embed.add_field(name="Now searching for '{}' on Genius.com...".format(searchterms),
+        embed.add_field(name=f"Now searching for '{searchterms}' on Genius.com...",
                         value="Searching for lyrics...",
                         inline=False)
         await ctx.send(embed=embed)
@@ -426,7 +422,7 @@ class Genius:
 
         try:
             if len(lyrics) <= 1000:
-                embed.add_field(name="Lyrics for '{0}' by '{1}':".format(songtitle, songartist),
+                embed.add_field(name=f"Lyrics for '{songtitle}' by '{songartist}':",
                                 value=lyrics,
                                 inline=False)
                 await ctx.send(embed=embed)
@@ -438,7 +434,7 @@ class Genius:
                         embedcontent += "..."
                     if not i == list(range(0, len(lyrics), 1000))[0]:
                         embedcontent = "..." + embedcontent
-                    embed.add_field(name="Lyrics for '{0}' by {1}:".format(songtitle, songartist),
+                    embed.add_field(name=f"Lyrics for '{songtitle}' by '{songartist}':",
                                     value=embedcontent,
                                     inline=False)
                     await ctx.send(embed=embed)
@@ -462,7 +458,7 @@ class Seasonal:
                     else:
                         changednick = ctx.message.author.nick + " \U0001f383"
                     await ctx.message.author.edit(nick=changednick)
-                    await ctx.send("Your nickname is now '{}'.".format(changednick))
+                    await ctx.send(f"Your nickname is now '{changednick}'.")
                 else:
                     await ctx.send("Your nickname is already spooky!")
 
@@ -473,7 +469,7 @@ class Seasonal:
                     else:
                         changednick = ctx.message.author.name + " \U0001f383"
                     await ctx.message.author.edit(nick=changednick)
-                    await ctx.send("Your nickname is now '{}'.".format(changednick))
+                    await ctx.send(f"Your nickname is now '{changednick}'.")
                 else:
                     await ctx.send("Your nickname is already spooky!")
         else:
@@ -490,7 +486,7 @@ class Seasonal:
                     else:
                         changednick = ctx.message.author.nick + " \U0001f384"
                     await ctx.message.author.edit(nick=changednick)
-                    await ctx.send("Your nickname is now '{}'.".format(changednick))
+                    await ctx.send(f"Your nickname is now '{changednick}'.")
                 else:
                     await ctx.send("Your nickname is already Christmassy!")
 
@@ -501,7 +497,7 @@ class Seasonal:
                     else:
                         changednick = ctx.message.author.name + " \U0001f384"
                     await ctx.message.author.edit(nick=changednick)
-                    await ctx.send("Your nickname is now '{}'.".format(changednick))
+                    await ctx.send(f"Your nickname is now '{changednick}'.")
                 else:
                     await ctx.send("Your nickname is already Christmassy!")
         else:
