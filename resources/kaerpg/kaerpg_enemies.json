@@ -21,7 +21,7 @@
         "Surface Corruption": {
             "Enemies": ["Lesser Felguard", "Imp"],
             "Number of Enemies": 2,
-            "Minlevel": 7,
+            "Minlevel": 8,
             "Bosses": ["Fel Beast"]
         }
     },
