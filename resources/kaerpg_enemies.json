@@ -46,7 +46,7 @@
             "Info": "A stronger variant of the goblin. Tread with caution: this enemy is the bane of new adventurers."
         },
         "Blue Slime": {
-            "Health": 20,
+            "Health": 24,
             "Resistance": 5,
             "Damage": 3,
             "Info": "A seemingly harmless creature. These slimes can soak up a few hits."
