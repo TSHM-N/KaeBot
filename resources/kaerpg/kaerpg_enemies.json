@@ -17,6 +17,12 @@
             "Number of Enemies": 6,
             "Minlevel": 6,
             "Bosses": ["Totem Giant"]
+        },
+        "Surface Corruption": {
+            "Enemies": ["Lesser Felguard", "Imp"],
+            "Number of Enemies": 2,
+            "Minlevel": 7,
+            "Bosses": ["Fel Beast"]
         }
     },
 
@@ -110,6 +116,27 @@
             "Resistance": 12,
             "Damage": 18,
             "Agility": 5,
+            "Info": "An ancient being of the jungle that guards the monument. It is slow moving but has overwhelming strength."
+         },
+        "Lesser Felguard": {
+            "Health": 48,
+            "Resistance": 10,
+            "Damage": 12,
+            "Agility": 10,
+            "Info": "Lesser Felguards guard small corrupted fields. They wield great swords forged from the depths of hell."
+         },
+        "Imp": {
+            "Health": 36,
+            "Resistance": 7,
+            "Damage": 15,
+            "Agility": 14,
+            "Info": "Small fiendish beings born from small chambers of corruption. They are agile and attack with acid and tough horns."
+         },
+        "Fel Beast": {
+            "Health": 88,
+            "Resistance": 8,
+            "Damage": 18,
+            "Agility": 12,
             "Info": "An ancient being of the jungle that guards the monument. It is slow moving but has overwhelming strength."
         }
     }
