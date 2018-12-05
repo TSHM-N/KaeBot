@@ -556,7 +556,7 @@ class KaeRPG:
 
         critboost = 1.5 if random.random() > 0.95 else 1
         fluctuation = random.uniform(weapondamage + rawdamageboost * -0.25, weapondamage + rawdamageboost * 0.25)
-        finaldamage = round(((weapondamage + rawdamageboost) / 3 * critboost + fluctuation) - enemyresistance, 2)
+        finaldamage = round(((weapondamage + rawdamageboost) * (rawdamageboost * 0.1) * critboost + fluctuation) - enemyresistance, 2)
         return finaldamage if finaldamage >= 0 else 0
 
     @staticmethod
@@ -590,7 +590,6 @@ class KaeRPG:
             enemyhp = KaeRPG.enemies[enemy]["Health"]
             enemymaxhp = enemyhp
             turn = 1
-
             embed.add_field(name=f"Enemy {enemyindex} of {dungeon}:",
                             value=f"{enemy}",
                             inline=False)
@@ -618,11 +617,11 @@ class KaeRPG:
                         )
                         enemyhp -= turndamagedelivered
                         if enemyhp <= 0:
-                            await ctx.send(f"With a final blow worth {turndamagedelivered}HP, you deliver "
+                            await ctx.send(f"With a final blow worth {turndamagedelivered:.2f}HP, you deliver "
                                            f"the final blow to the {enemy}.")
                             break
                         else:
-                            await ctx.send(f"You strike the {enemy} for {turndamagedelivered}HP, leaving it"
+                            await ctx.send(f"You strike the {enemy} for {turndamagedelivered:.2f}HP, leaving it "
                                            f"with {enemyhp}HP.")
                     elif action == "guard":
                         pass
@@ -680,6 +679,8 @@ class KaeRPG:
                         pass
 
                 turn += 1
+            experience = int(KaeRPG.enemies[enemy]["Health"] + KaeRPG.enemies[enemy]["Damage"] + KaeRPG.enemies[enemy]["Resistance"] / 3)
+            await ctx.send(f"You earned {experience}XP from killing {enemy}.")
 
     @commands.group(name="kaerpg", brief="A command group for every KaeRPG command. Aliased to kr.",
                     description="A command group for every KaeRPG command. Aliased to kr.", aliases=["kr"])
