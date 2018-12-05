@@ -1,5 +1,6 @@
 {
-    "_damagenote": "D: 0-30; C: 30 - 50; B: 50-100; A: 100-200; S: 200-300; Alpha: 300-400; Beta: 400-500; Omega: 500-600",
+    "_damagenote": "D: 0-30; C: 30-50; B: 50-100; A: 100-200; S: 200-300; Alpha: 300-400; Beta: 400-500; Omega: 500-600",
+    "_protectionnote": "D: 0-30; C: 30-50; B: 50-75; A: 75-100; S: 100-150; Alpha: 150-200; Beta: 200-250; Omega: 250-300",
     
     "Weapons": {
         "Lumber's Axe": {
@@ -48,7 +49,7 @@
         },
         "Worldcarver Scythe": {
             "Rank": "Omega",
-            "Damage": 1020,
+            "Damage": 543,
             "Scaling": {
                 "STR": "B",
                 "DEX": "A",
@@ -59,7 +60,7 @@
         },
         "Flickering Blade": {
             "Rank": "Omega",
-            "Damage": 1100,
+            "Damage": 570,
             "Scaling": {
                 "STR": "A",
                 "DEX": "B",
@@ -70,7 +71,7 @@
         },
         "Deadeye": {
             "Rank": "Omega",
-            "Damage": 1057,
+            "Damage": 530,
             "Scaling": {
                 "STR": "B",
                 "DEX": "A",
@@ -81,7 +82,7 @@
         },
         "The Necronomicon": {
             "Rank": "Omega",
-            "Damage": 1069,
+            "Damage": 569,
             "Scaling": {
                 "STR": "D",
                 "DEX": "B",
@@ -92,7 +93,7 @@
         },
         "Staff of Galdiea": {
             "Rank": "Omega",
-            "Damage": 1037,
+            "Damage": 555,
             "Scaling": {
                 "STR": "D",
                 "DEX": "A",
@@ -103,7 +104,7 @@
         },
         "'Nick'": {
             "Rank": "Beta",
-            "Damage": 769,
+            "Damage": 462,
             "Scaling": {
                 "STR": "B",
                 "DEX": "B",
@@ -114,7 +115,7 @@
         },
         "Voodoo Glove": {
             "Rank": "Alpha",
-            "Damage": 700,
+            "Damage": 332,
             "Scaling": {
                 "STR": "D",
                 "DEX": "A",
@@ -125,7 +126,7 @@
         },
         "Bear Gloves": {
             "Rank": "A",
-            "Damage": 530,
+            "Damage": 160,
             "Scaling": {
                 "STR": "A",
                 "DEX": "D",
@@ -136,7 +137,7 @@
         },
         "Lyreaoux Sword": {
             "Rank": "Beta",
-            "Damage": 800,
+            "Damage": 425,
             "Scaling": {
                 "STR": "A",
                 "DEX": "B",
@@ -147,7 +148,7 @@
         },
         "Assassin's Blade": {
             "Rank": "S",
-            "Damage": 610,
+            "Damage": 233,
             "Scaling": {
                 "STR": "C",
                 "DEX": "A",
@@ -158,7 +159,7 @@
         },
         "Gun That Can Kill The Past": {
             "Rank": "Alpha",
-            "Damage": 720,
+            "Damage": 333,
             "Scaling": {
                 "STR": "D",
                 "DEX": "A",
@@ -169,7 +170,7 @@
         },
         "Mundane Sword": {
             "Rank": "C",
-            "Damage": 59,
+            "Damage": 42,
             "Scaling": {
                 "STR": "C",
                 "DEX": "C",
@@ -180,7 +181,7 @@
         },
         "Flintlock Pistol": {
             "Rank": "C",
-            "Damage": 62,
+            "Damage": 39,
             "Scaling": {
                 "STR": "D",
                 "DEX": "B",
@@ -191,7 +192,7 @@
         },
         "Mana Breaker": {
             "Rank": "Omega",
-            "Damage": 1500,
+            "Damage": 572,
             "Scaling": {
                 "STR": "A",
                 "DEX": "C",
@@ -213,7 +214,7 @@
         },
         "Livingwood Bow": {
             "Rank": "B",
-            "Damage": 300,
+            "Damage": 75,
             "Scaling": {
                 "STR": "D",
                 "DEX": "B",
