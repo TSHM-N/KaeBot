@@ -1,4 +1,6 @@
 {
+    "_note": "D: 0-30; C: 30 - 50; B: 50-100; A: 100-200; S: 200-300; Alpha: 300-400; Beta: 400-500; Omega: 500-600",
+    
     "Weapons": {
         "Lumber's Axe": {
             "Rank": "D",
@@ -197,6 +199,28 @@
                 "ARC": "N/A"
             },
             "Info": "A large, clunky sword with edges that seem to ripple around reality."
+        },
+        "Rusted Blade": {
+            "Rank": "D",
+            "Damage": 23,
+            "Scaling": {
+                "STR": "C",
+                "DEX": "D",
+                "PRE": "D",
+                "ARC": "N/A"
+            },
+            "Info": "An old weapon, well past its heyday. Still, it may serve you well."
+        },
+        "Livingwood Bow": {
+            "Rank": "B",
+            "Damage": 300,
+            "Scaling": {
+                "STR": "D",
+                "DEX": "B",
+                "PRE": "A",
+                "ARC": "N/A"
+            },
+            "Info": "Wrought from the branches of a living tree. It still faintly thrums with life."
         }
     },
     "Armour": {
@@ -224,17 +248,17 @@
             "Type": "Light",
             "Info": "It reeks of sweaty Goblin, but is hardened with natural material and leather."
         },
-        "Damp Muddy Chestplate": {
+        "Damp, Muddy Tunic": {
             "Rank": "D",
             "Protection": 12,
             "Type": "Medium",
-            "Info": "It was probably an actual chestplate, but its too hard to tell."
+            "Info": "It was probably an actual chestplate at one point, but its too hard to tell."
         },
         "Treant Bark": {
             "Rank": "D",
             "Protection": 18,
             "Type": "Heavy",
-            "Info": "Poor treant. Everything about this screams: splinters."
+            "Info": "Poor treant. Everything about this screams 'splinters'."
         }
     },
     "Consumables": {
