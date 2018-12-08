@@ -204,6 +204,29 @@ class Administrator:
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nAdministrator\n```")
 
+    @commands.command(name="prune", brief="Prunes members from the server.",
+                      description="Prune members from the server who have been inactive for a specified number of days"
+                                  " (default: 5) and who have no roles.")
+    async def prune(self, ctx, daysinactive: int=5, reason: str=None):
+        if ctx.author.guild_permissions.administrator:
+            estimate = await ctx.guild.estimate_pruned_members(days=daysinactive)
+            if not estimate == 0:
+                await ctx.send(f"\U00002757This opeation will prune **{estimate}** from the server who have been inactive"
+                               f" for the past **{daysinactive}** days and who have no roles. Proceed? (y\\n)")
+            else:
+                return await ctx.send("No eligible, prunable members of this server who have been inactive for the past"
+                                      f" {daysinactive} days.")
+            message = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
+            if message.content == "y":
+                await ctx.guild.prune_members(days=daysinactive, reason=reason)
+                await ctx.send(f"Purged {estimate} members.")
+            elif message.content == "n":
+                await ctx.send("Prune cancelled.")
+            else:
+                await ctx.send("Invalid input. Presuming `n` response; cancelling prune.")
+        else:
+            await ctx.send("You lack the following permissions to do this:\n```css\nAdministrator\n```")
+
 
 class Moderator:
     @commands.command(name="kick", brief="Kicks a user.",
