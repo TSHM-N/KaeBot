@@ -546,7 +546,10 @@ class NSFW:
                     posturl = f"https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags={tags.replace(' ', '+')}&limit=100"
                     async with session.post(posturl) as response:
                         postdict = json.loads(json.dumps(xmltodict.parse((await response.read()).decode("utf-8"))))
-                        randompost = random.choice(postdict["posts"]["post"])
+                        try:
+                            randompost = random.choice(postdict["posts"]["post"])
+                        except KeyError:
+                            return await ctx.send("No results found.")
                         embed.set_image(url=randompost["@file_url"])
                         await ctx.send(embed=embed)
         else:
