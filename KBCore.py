@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import logging, os, random, asyncio, aiohttp, asyncpg, bs4, datetime, difflib, re, json
+import logging, os, random, asyncio, aiohttp, asyncpg, bs4, datetime, difflib, re, json, xmltodict
 
 # Made by TSHMN
 
@@ -111,7 +111,7 @@ class ErrorHandler:
 
         else:
             embed.add_field(name="An unhandled exception occurred.",
-                            value=error,
+                            value=str(error),
                             inline=False)
 
         await ctx.send(embed=embed)
@@ -137,6 +137,14 @@ class BotOwner:
             os.system("py .\KBRestartHax.py")
             await bot.kaedb.close()
             await bot.logout()
+        else:
+            await ctx.send("You lack the following permissions to do this:\n```css\nBot Owner\n```")
+
+    @commands.command(name="forceerror", brief="...", description="For testing. Bot Owner only.", hidden=True)
+    async def error(self, ctx):
+        if await bot.is_owner(ctx.author):
+            errortype = random.choice([ValueError(), IndexError(), KeyError(), AttributeError()])
+            raise errortype
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nBot Owner\n```")
 
@@ -522,6 +530,29 @@ class Travitia:
                 chatcontext.clear()
                 chatcontext.append(message.content)
                 chatcontext.append(responsetext)
+
+
+class NSFW:
+    @commands.command(name="rule34", brief="Search rule34.xxx for a specific tag.",
+                      description="Search rule34.xxx for a specific tag and return a post.\n Aliased to r34.",
+                      aliases=["r34"])
+    async def rule34(self, ctx, *, tags):
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
+        embed.set_footer(text=f"{KAEBOT_VERSION} | Searched tags: {tags}")
+        embed.set_author(name=f"Random result for '{tags}':", icon_url=bot.user.avatar_url)
+        if ctx.channel.is_nsfw():
+            async with ctx.channel.typing():
+                async with aiohttp.ClientSession() as session:
+                    posturl = f"https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags={tags.replace(' ', '+')}&limit=100"
+                    async with session.post(posturl) as response:
+                        postdict = json.loads(json.dumps(xmltodict.parse((await response.read()).decode("utf-8"))))
+                        randompost = random.choice(postdict["posts"]["post"])
+                        embed.set_image(url=randompost["@file_url"])
+                        await ctx.send(embed=embed)
+        else:
+            await ctx.send("\U00002757This command cannot execute in a non-NSFW channel.\n"
+                           "Try using this command in an NSFW channel (or set this channel to NSFW if you have "
+                           "permission to do so).")
 
 
 class KaeRPG:
@@ -1122,8 +1153,9 @@ bot.add_cog(Miscellaneous())
 bot.add_cog(Seasonal())
 bot.add_cog(Genius())
 bot.add_cog(Travitia())
+bot.add_cog(NSFW())
 bot.add_cog(KaeRPG())
-# bot.add_cog(ErrorHandler())
+bot.add_cog(ErrorHandler())
 bot.load_extension("jishaku")
 
 bot.run(TOKEN)
