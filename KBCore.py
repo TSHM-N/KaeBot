@@ -273,14 +273,18 @@ class Moderator:
             await ctx.send("You lack the following permissions to do this:\n```css\nBan Members\n```")
             print("Unban denied due to bad perms.")
 
+    # @commands.command(name="purge", brief="Purge the last specified messages.",
+    #                   description="Purge the last specified amount of messages.")
+    # async def purge(self, ctx, *, topurge: int):
+    #     await ctx.channel.purge()
+
 
 class Miscellaneous:
     @commands.command(name="random", brief="Generates a random number between 'start' and 'end'. Int only.",
                       description="Generates a random int between int 'start' and int 'end' such that "
                                   "'start <= n <= end'. Only accepts int arguments.")
     async def random(self, ctx, start: int, end: int):
-        r = random.randint(start, end)
-        await ctx.send(f"Your number is: {r}.")
+        await ctx.send(f"Your number is: {random.randint(start, end)}.")
 
     @commands.command(name="russianroulette", brief="Play a quick game of Russian Roulette.",
                       description="Play a game of Russian Roulette.\n Choose the number of bullets in your barrel "
@@ -401,6 +405,46 @@ class Miscellaneous:
             await ctx.send(f"{ctx.author.mention} gently pats {user.mention} and says '{reason}'.")
         else:
             await ctx.send(f"{ctx.author.mention} gently pats {user.mention}.")
+
+    @commands.command(name="hotornot", brief="Check the hotness of someone.",
+                      description="Check someone's hotness; defaults to you if no argument is provided.")
+    async def hotornot(self, ctx, user: commands.MemberConverter=None):
+        if not user:
+            user = ctx.author
+        rawasciinum = 0
+        for char in list(user.name):
+            rawasciinum += ord(char)
+        hotness = rawasciinum % 100
+        if hotness >= 90:
+            message = "They're a registered QT3.14!"
+        elif hotness >= 80:
+            message = "Great by Sacred Heart standards!"
+        elif hotness >= 60:
+            message = "Definitely dating material."
+        elif hotness >= 40:
+            message = "Not the best, but definitely not the worst!"
+        elif hotness >= 20:
+            message = "Yikes."
+        elif hotness >= 5:
+            message = "Ouch..."
+        else:
+            message = "You better have a *really* good personality, bud."
+
+        await ctx.send(f"{user.mention} is `{hotness}%` hot. {message}")
+
+    @commands.command(name="lovecalculator", brief="Calculate the love percentage of two people.",
+                      description="Calculate the love percentage of two people.", aliases=["lovecalc"])
+    async def lovecalculator(self, ctx, user1: discord.Member, user2: discord.Member):
+        shipname = (user1.name[:len(user1.name)//2] + user2.name[len(user2.name)//2:]).capitalize()
+        user1raw = 0
+        for char in list(user1.name):
+            user1raw += ord(char)
+        user2raw = 0
+        for char in list(user2.name):
+            user2raw += ord(char)
+
+        love = (user1raw + user2raw) % 100
+        await ctx.send(f"{user1.mention} & {user2.mention} (ship name: {shipname}) have a love percentage of {love}%!")
 
 
 class Genius:
@@ -556,8 +600,8 @@ class Travitia:
 
 
 class NSFW:
-    @commands.command(name="rule34", brief="Search rule34.xxx for a specific tag.",
-                      description="Search rule34.xxx for a specific tag and return a post.\n Aliased to r34.",
+    @commands.command(name="rule34", brief="Search rule34.xxx for a tag or tags.",
+                      description="Search rule34.xxx for one or more tags and return a post.\n Aliased to r34.",
                       aliases=["r34"])
     async def rule34(self, ctx, *, tags):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
