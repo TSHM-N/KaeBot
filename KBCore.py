@@ -333,6 +333,17 @@ class Miscellaneous:
         else:
             await ctx.send("Tails.")
 
+    @commands.command(name="vaporwave", brief="Vaporwave some text!", description="Vaporwave inputted text.",
+                      aliases=["vapourwave"])
+    async def vaporwave(self, ctx, *, text: str):
+        vaporwaved = ""
+        for character in text:
+            if character == " ":
+                vaporwaved += "  "
+                continue
+            vaporwaved += chr(0xFEE0 + ord(character))
+        await ctx.send(vaporwaved)
+
     @commands.command(name="slap", brief="Slap someone!", description="Slap someone!")
     async def slap(self, ctx, user: discord.Member, *, reason: str=""):
         if reason:
@@ -422,7 +433,7 @@ class Miscellaneous:
         elif hotness >= 60:
             message = "Definitely dating material."
         elif hotness >= 40:
-            message = "Not the best, but definitely not the worst!"
+            message = "Maybe not the best, but definitely not the worst!"
         elif hotness >= 20:
             message = "Yikes."
         elif hotness >= 5:
@@ -435,6 +446,8 @@ class Miscellaneous:
     @commands.command(name="lovecalculator", brief="Calculate the love percentage of two people.",
                       description="Calculate the love percentage of two people.", aliases=["lovecalc"])
     async def lovecalculator(self, ctx, user1: discord.Member, user2: discord.Member):
+        if user1 == user2:
+            return await ctx.send("You can't calculate love between the same person.")
         shipname = (user1.name[:len(user1.name)//2] + user2.name[len(user2.name)//2:]).capitalize()
         user1raw = 0
         for char in list(user1.name):
@@ -448,8 +461,8 @@ class Miscellaneous:
 
 
 class Genius:
-    baseurl = "https://api.genius.com"
-    header = {"Authorization": "Bearer " + GENIUS_CLIENTTOKEN}
+    BASEURL = "https://api.genius.com"
+    HEADER = {"Authorization": "Bearer " + GENIUS_CLIENTTOKEN}
 
     @commands.command(name="lyrics", brief="Get the lyrics to a song.",
                       description="Searches genius.com for the lyrics to a specified song.")
@@ -464,13 +477,13 @@ class Genius:
         await ctx.send(embed=embed)
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(Genius.baseurl + "/search",
-                                   headers=Genius.header,
+            async with session.get(Genius.BASEURL + "/search",
+                                   headers=Genius.HEADER,
                                    data={"q": searchterms}) as response:
                 resultjson = await response.json()
 
-            async with session.get(Genius.baseurl + resultjson["response"]["hits"][0]["result"]["api_path"],
-                                   headers=Genius.header) as response:
+            async with session.get(Genius.BASEURL + resultjson["response"]["hits"][0]["result"]["api_path"],
+                                   headers=Genius.HEADER) as response:
                 songjson = await response.json()
 
             songurl = songjson["response"]["song"]["url"]
@@ -623,6 +636,27 @@ class NSFW:
             await ctx.send("\U00002757This command cannot execute in a non-NSFW channel.\n"
                            "Try using this command in an NSFW channel (or set this channel to NSFW if you have "
                            "permission to do so).")
+
+    @commands.group(name="nhentai", brief="A command group for commands that connect to nhentai's API.",
+                    description="A command group for commands that connect to nhentai's API.")
+    async def nhentai(self, ctx):
+        if not ctx.invoked_subcommand:
+            if ctx.channel.is_nsfw():
+                embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
+                embed.set_footer(text=KAEBOT_VERSION)
+                embed.set_author(name="KaeBot", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+
+                subcommands = ""
+                for comm in NSFW.nhentai.commands:
+                    subcommands += comm.name
+                embed.add_field(name="No command specified.",
+                                value=f"Please specify a subcommand: {subcommands}",
+                                inline=False)
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send("\U00002757This command cannot execute in a non-NSFW channel.\n"
+                               "Try using this command in an NSFW channel (or set this channel to NSFW if you have "
+                               "permission to do so).")
 
 
 class KaeRPG:
@@ -829,14 +863,14 @@ class KaeRPG:
                     embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
                     await ctx.send("Entered character creation!\n"
-                                   "Firstly, specify your character's name (10 characters or less).")
+                                   "Firstly, specify your character's name (20 characters or less).")
                     while True:
                         name = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel)
                         name = name.content
-                        if len(name) <= 10:
+                        if len(name) <= 20:
                             break
                         else:
-                            await ctx.send("That name is too long (>10 characters). Try again.")
+                            await ctx.send("That name is too long (>20 characters). Try again.")
 
                     statspecs = {
                         "1": "STR 14 / DEX 12 / PRE 10 / ARC 8 / CON 13 / AGI 8",
