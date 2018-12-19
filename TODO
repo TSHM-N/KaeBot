@@ -1,5 +1,5 @@
 # Alpha milestones:
-TODO: Implement purge, allkick, allban, allunban
+TODO: Implement purge
 TODO: Fix any other major bugs (obviously)
 # Beta milestones
 TODO: Add cooldowns for problematic commands (example: 'lyrics', has the potential to spam channels)
