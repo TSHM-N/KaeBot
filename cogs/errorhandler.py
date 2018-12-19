@@ -9,8 +9,7 @@ class ErrorHandler:
 
     async def on_command_error(self, ctx, error):
         embed = discord.Embed(
-            title="Fatal Error:",
-            colour=discord.Color.from_rgb(81, 0, 124)
+            title="Fatal Error:", colour=discord.Color.from_rgb(81, 0, 124)
         )
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
         embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
@@ -23,7 +22,9 @@ class ErrorHandler:
                 invalidcommand = re.findall(r"\"([^\"]*)\"", error.args[0])[0]
             except IndexError:
                 invalidcommand = None
-            similar = difflib.get_close_matches(invalidcommand, self.bot.strcommands, n=5, cutoff=0.6)  # Get similar words
+            similar = difflib.get_close_matches(
+                invalidcommand, self.bot.strcommands, n=5, cutoff=0.6
+            )  # Get similar words
 
             similarstr = ""
             if not similar:
@@ -32,14 +33,14 @@ class ErrorHandler:
                 for simstr in similar:
                     similarstr += f"{simstr}\n"
 
-            embed.add_field(name="Invalid command. Did you mean:",
-                            value=similarstr,
-                            inline=False)
+            embed.add_field(
+                name="Invalid command. Did you mean:", value=similarstr, inline=False
+            )
 
         else:
-            embed.add_field(name="An unhandled exception occurred.",
-                            value=str(error),
-                            inline=False)
+            embed.add_field(
+                name="An unhandled exception occurred.", value=str(error), inline=False
+            )
 
         await ctx.send(embed=embed)
 
