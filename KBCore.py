@@ -4,7 +4,7 @@ import logging, os, random, asyncio, aiohttp, asyncpg, bs4, datetime, difflib, r
 
 # Made by TSHMN
 
-KAEBOT_VERSION = "KaeBot Alpha"
+KAEBOT_VERSION = "KaeBot Beta"
 logging.basicConfig(level=logging.INFO)
 discord.opus.load_opus("libopus-0.x64.dll")
 strcommands = []
@@ -352,10 +352,13 @@ class Moderator:
             await ctx.send("You lack the following permissions to do this:\n```css\nBan Members\n```")
             print("Unban denied due to bad perms.")
 
-    # @commands.command(name="purge", brief="Purge the last specified messages.",
-    #                   description="Purge the last specified amount of messages.")
-    # async def purge(self, ctx, *, topurge: int):
-    #     await ctx.channel.purge()
+    @commands.command(name="purge", brief="Purge the last specified messages.",
+                      description="Purge the last specified amount of messages.")
+    async def purge(self, ctx, limit: int):
+        if limit <= 0 or limit > 100:
+            return await ctx.send("Invalid range: must be between 0 - 100 messages.")
+        limit += 1
+        await ctx.channel.purge(limit=limit)
 
 
 class Miscellaneous:
