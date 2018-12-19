@@ -1,11 +1,11 @@
 # Alpha milestones
 All complete!
 # Beta milestones
+TODO: Rewrite seasonal commands to use display_name
 TODO: Add cooldowns for problematic commands (example: 'lyrics', has the potential to spam channels)
 TODO: Add more moderation features (with customisability) such as autorole, stickyrole and antispam
 TODO: Implement decorators for better control over commands (commands.bot_has_permissions(), commands.has_permissions())
 TODO: Flesh out KaeRPG
-TODO: Use seperate .py files for each cog instead of lumping everything into one file
 TODO: Replace some plaintext responses with fancier responses and/or embeds
 TODO: Cram as many commands as I can into this thing
 TODO: Get rid of the god-awful restarthax python file and integrate another solution to restart the bot
