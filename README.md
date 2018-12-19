@@ -2,8 +2,8 @@
 A constantly WIP Discord bot written in discord.py. 
 
 # What is KaeBot?
-KaeBot is a WIP Discord bot written in the __rewrite__ branch of the [discord.py](https://github.com/Rapptz/discord.py) API wrapper for Python. KaeBot currently features a wide array of commands, built-in database support and over a thousand total lines of code.
-Currently, KaeBot is in the alpha stage of development.
+KaeBot is a WIP Discord bot written in the __rewrite__ branch of the [discord.py](https://github.com/Rapptz/discord.py) API wrapper for Python. KaeBot features a wide array of commands, built-in database support, integration with several external APIs and over a thousand total lines of code.
+Currently, KaeBot is in the beta stage of development.
 
 # Invite KaeBot to your Discord server
 As KaeBot is currently in active development, I have no plans to release a public invite link for KaeBot *for now*.
