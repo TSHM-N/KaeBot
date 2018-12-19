@@ -1,4 +1,4 @@
-# KaeBot
+# KaeBot ![](https://img.shields.io/badge/source-open-%2326003f.svg) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 A constantly WIP Discord bot written in discord.py. 
 
 # What is KaeBot?
