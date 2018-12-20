@@ -107,8 +107,8 @@ class Administrator:
         brief="Kicks everyone in the server. Use this wisely.",
         description="Kicks everyone in the server. Skips kickable members.\n" "Restricted to Administrator.",
     )
-    @commands.bot_has_permissions(kick_members=True)
-    @commands.has_permissions(kick_members=True)
+    @commands.bot_has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True)
     async def allkick(self, ctx):
         message = await ctx.send(
             "\U00002757WARNING\U00002757 This command will **kick everyone** in the server "
@@ -140,8 +140,8 @@ class Administrator:
         brief="Bans everyone in the server. Use this wisely.",
         description="Bans everyone in the server. Skips unbannable members.\n" "Restricted to Administrator.",
     )
-    @commands.bot_has_permissions(ban_members=True)
-    @commands.has_permissions(ban_members=True)
+    @commands.bot_has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True)
     async def allban(self, ctx):
         message = await ctx.send(
             "\U00002757WARNING\U00002757 This command will **ban everyone** in the server "
@@ -173,8 +173,8 @@ class Administrator:
         brief="Unbans everyone who has been banned from the server.",
         description="Unbans everyone who is currently banned from the server.\n" "Restricted to Administrator.",
     )
-    @commands.bot_has_permissions(ban_members=True)
-    @commands.has_permissions(ban_members=True)
+    @commands.bot_has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True)
     async def allunban(self, ctx):
         message = await ctx.send(
             "\U00002757WARNING\U00002757 This command will **unban everyone** in the server "
