@@ -14,18 +14,14 @@ class Moderator:
     async def kick(self, ctx, user: discord.Member, *, reason=""):
         print(f"Attempted kick by {ctx.message.author}. Target: {user}")
         if ctx.message.author.guild_permissions.kick_members:
-            await user.send(
-                content=f"You have been kicked from {ctx.message.guild} by {ctx.message.author}."
-            )
+            await user.send(content=f"You have been kicked from {ctx.message.guild} by {ctx.message.author}.")
             if not reason == "":
                 await user.send(content=f"Reason: '{reason}'")
             await user.kick(reason=reason)
             await ctx.send(f"{user} has been kicked.")
             print("Kick successful.")
         else:
-            await ctx.send(
-                "You lack the following permissions to do this:\n```css\nKick Members\n```"
-            )
+            await ctx.send("You lack the following permissions to do this:\n```css\nKick Members\n```")
             print("Kick denied due to bad perms.")
 
     @commands.command(
@@ -36,18 +32,14 @@ class Moderator:
     async def ban(self, ctx, user: discord.Member, *, reason=""):
         print(f"Attempted ban by {ctx.message.author}. Target: {user}")
         if ctx.message.author.guild_permissions.ban_members:
-            await user.send(
-                content=f"You have been banned from {ctx.message.guild} by {ctx.message.author}."
-            )
+            await user.send(content=f"You have been banned from {ctx.message.guild} by {ctx.message.author}.")
             if not reason == "":
                 await user.send(content=f"Reason: '{reason}'")
             await user.ban(reason=reason, delete_message_days=0)
             await ctx.send(f"{user} has been banned. Their ID: {user.id}")
             print("Ban successful.")
         else:
-            await ctx.send(
-                "You lack the following permissions to do this:\n```css\nBan Members\n```"
-            )
+            await ctx.send("You lack the following permissions to do this:\n```css\nBan Members\n```")
             print("Ban denied due to bad perms.")
 
     @commands.command(
@@ -64,9 +56,7 @@ class Moderator:
             await ctx.send(f"{true_user} unbanned.")
             print("Unban successful.")
         else:
-            await ctx.send(
-                "You lack the following permissions to do this:\n```css\nBan Members\n```"
-            )
+            await ctx.send("You lack the following permissions to do this:\n```css\nBan Members\n```")
             print("Unban denied due to bad perms.")
 
     @commands.command(

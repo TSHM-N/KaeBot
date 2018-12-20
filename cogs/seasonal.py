@@ -16,9 +16,7 @@ class Seasonal:
         if datetime.datetime.today().month == 10:
             try:
                 if not ctx.message.author.nick.endswith("\U0001f383"):
-                    if ctx.message.author.nick.endswith(
-                        "\U0001f384"
-                    ):  # If already ends with Christmas emoji
+                    if ctx.message.author.nick.endswith("\U0001f384"):  # If already ends with Christmas emoji
                         changednick = ctx.message.author.nick[:-1] + " \U0001f383"
                     else:
                         changednick = ctx.message.author.nick + " \U0001f383"
@@ -29,9 +27,7 @@ class Seasonal:
 
             except AttributeError:  # except if the person has no nick, because endswith is null
                 if not ctx.message.author.name.endswith("\U0001f383"):
-                    if ctx.message.author.name.endswith(
-                        "\U0001f384"
-                    ):  # If already ends with Christmas emoji
+                    if ctx.message.author.name.endswith("\U0001f384"):  # If already ends with Christmas emoji
                         changednick = ctx.message.author.name[:-1] + " \U0001f383"
                     else:
                         changednick = ctx.message.author.name + " \U0001f383"
@@ -51,9 +47,7 @@ class Seasonal:
         if datetime.datetime.today().month == 12:
             try:
                 if not ctx.message.author.nick.endswith("\U0001f384"):
-                    if ctx.message.author.nick.endswith(
-                        "\U0001f383"
-                    ):  # If already ends with Spooky emoji
+                    if ctx.message.author.nick.endswith("\U0001f383"):  # If already ends with Spooky emoji
                         changednick = ctx.message.author.nick[:-1] + " \U0001f384"
                     else:
                         changednick = ctx.message.author.nick + " \U0001f384"
@@ -64,9 +58,7 @@ class Seasonal:
 
             except AttributeError:  # except if the person has no nick, because endswith is null
                 if not ctx.message.author.name.endswith("\U0001f384"):
-                    if ctx.message.author.name.endswith(
-                        "\U0001f383"
-                    ):  # If already ends with Spooky emoji
+                    if ctx.message.author.name.endswith("\U0001f383"):  # If already ends with Spooky emoji
                         changednick = ctx.message.author.name[:-1] + " \U0001f384"
                     else:
                         changednick = ctx.message.author.name + " \U0001f384"

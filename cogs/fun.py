@@ -8,10 +8,7 @@ class Fun:
         self.bot = bot
 
     @commands.command(
-        name="vaporwave",
-        brief="Vaporwave some text!",
-        description="Vaporwave inputted text.",
-        aliases=["vapourwave"],
+        name="vaporwave", brief="Vaporwave some text!", description="Vaporwave inputted text.", aliases=["vapourwave"]
     )
     async def vaporwave(self, ctx, *, text: str):
         vaporwaved = ""
@@ -25,24 +22,14 @@ class Fun:
     @commands.command(name="slap", brief="Slap someone!", description="Slap someone!")
     async def slap(self, ctx, user: discord.Member, *, reason: str = ""):
         if reason:
-            await ctx.send(
-                f"{user.mention} just got slapped by {ctx.message.author.mention}! Reason: '{reason}'."
-            )
+            await ctx.send(f"{user.mention} just got slapped by {ctx.message.author.mention}! Reason: '{reason}'.")
         else:
-            await ctx.send(
-                f"{user.mention} just got slapped by {ctx.message.author.mention}!"
-            )
+            await ctx.send(f"{user.mention} just got slapped by {ctx.message.author.mention}!")
 
-    @commands.command(
-        name="pat",
-        brief="Pat someone on the head.",
-        description="Pat someone on the head.",
-    )
+    @commands.command(name="pat", brief="Pat someone on the head.", description="Pat someone on the head.")
     async def pat(self, ctx, user: discord.Member, *, reason: str = ""):
         if reason:
-            await ctx.send(
-                f"{ctx.author.mention} gently pats {user.mention} and says '{reason}'."
-            )
+            await ctx.send(f"{ctx.author.mention} gently pats {user.mention} and says '{reason}'.")
         else:
             await ctx.send(f"{ctx.author.mention} gently pats {user.mention}.")
 
@@ -84,9 +71,7 @@ class Fun:
     async def lovecalculator(self, ctx, user1: discord.Member, user2: discord.Member):
         if user1 == user2:
             return await ctx.send("You can't calculate love between the same person.")
-        shipname = (
-            user1.name[: len(user1.name) // 2] + user2.name[len(user2.name) // 2:]
-        ).capitalize()
+        shipname = (user1.name[: len(user1.name) // 2] + user2.name[len(user2.name) // 2 :]).capitalize()
         user1raw = 0
         for char in list(user1.name):
             user1raw += ord(char)
@@ -95,9 +80,7 @@ class Fun:
             user2raw += ord(char)
 
         love = (user1raw + user2raw) % 100
-        await ctx.send(
-            f"{user1.mention} & {user2.mention} (ship name: {shipname}) have a love percentage of {love}%!"
-        )
+        await ctx.send(f"{user1.mention} & {user2.mention} (ship name: {shipname}) have a love percentage of {love}%!")
 
     @commands.command(
         name="russianroulette",
@@ -114,9 +97,7 @@ class Fun:
                 await ctx.send("Do you have a death wish or something?")
             else:
                 if random.random() < (bullets / 6):
-                    await ctx.send(
-                        "You took a bullet to the head. Better luck next time!"
-                    )
+                    await ctx.send("You took a bullet to the head. Better luck next time!")
                 else:
                     await ctx.send("You survived! You live to play another day.")
         else:
@@ -144,12 +125,8 @@ class Fun:
                         " get banned."
                     )
                     await asyncio.sleep(5)
-                    await ctx.send(
-                        f"{ctx.message.author} has been banned. Their ID: {ctx.message.author.id}"
-                    )
-                    await ctx.message.author.ban(
-                        reason="You failed Ban Roulette.", delete_message_days=0
-                    )
+                    await ctx.send(f"{ctx.message.author} has been banned. Their ID: {ctx.message.author.id}")
+                    await ctx.message.author.ban(reason="You failed Ban Roulette.", delete_message_days=0)
                 else:
                     await ctx.send("You survived Ban Roulette! Nice job.")
         else:

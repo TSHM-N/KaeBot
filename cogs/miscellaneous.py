@@ -16,11 +16,7 @@ class Miscellaneous:
     async def random(self, ctx, start: int, end: int):
         await ctx.send(f"Your number is: {random.randint(start, end)}.")
 
-    @commands.command(
-        name="flip",
-        brief="Flips a coin.",
-        description="Flips a coin and returns the result.",
-    )
+    @commands.command(name="flip", brief="Flips a coin.", description="Flips a coin and returns the result.")
     async def flip(self, ctx):
         if random.randint(1, 2) == 1:
             await ctx.send("Heads.")
@@ -34,10 +30,7 @@ class Miscellaneous:
         " to bring KaeBot to your server.",
     )
     async def getinvite(self, ctx):
-        embed = discord.Embed(
-            title="Invite KaeBot to your server!",
-            colour=discord.Color.from_rgb(81, 0, 124),
-        )
+        embed = discord.Embed(title="Invite KaeBot to your server!", colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
         embed.add_field(
@@ -72,22 +65,15 @@ class Miscellaneous:
         await ctx.send("Rift opened! Type .close. to close the rift.")
         while True:
             message = await self.bot.wait_for(
-                "message",
-                check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                "message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel
             )
             if message.content == ".close.":
                 await ctx.send("Rift closed.")
                 break
             else:
-                await targetchannel.send(
-                    f"{ctx.author.name} speaks from a rift: '{message.content}'"
-                )
+                await targetchannel.send(f"{ctx.author.name} speaks from a rift: '{message.content}'")
 
-    @commands.command(
-        name="ping",
-        brief="Pong!",
-        description="Pings the bot and gets websocket latency.",
-    )
+    @commands.command(name="ping", brief="Pong!", description="Pings the bot and gets websocket latency.")
     async def ping(self, ctx):
         await ctx.send(f"Pong! Latency: {self.bot.latency * 1000:.2f}ms")
 

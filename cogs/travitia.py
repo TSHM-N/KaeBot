@@ -14,13 +14,10 @@ class Travitia:
     )
     async def chat(self, ctx):
         chatcontext = []
-        await ctx.send(
-            "You started chatting with KaeBot! Type `.close.` to stop chatting."
-        )
+        await ctx.send("You started chatting with KaeBot! Type `.close.` to stop chatting.")
         while True:
             message = await self.bot.wait_for(
-                "message",
-                check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                "message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel
             )
 
             if not 3 <= len(message.content) <= 60:

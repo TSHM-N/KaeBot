@@ -19,21 +19,16 @@ class Genius:
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
         embed.add_field(
-            name=f"Now searching for '{searchterms}' on Genius.com...",
-            value="Searching for lyrics...",
-            inline=False,
+            name=f"Now searching for '{searchterms}' on Genius.com...", value="Searching for lyrics...", inline=False
         )
         await ctx.send(embed=embed)
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                baseurl + "/search", headers=header, data={"q": searchterms}
-            ) as response:
+            async with session.get(baseurl + "/search", headers=header, data={"q": searchterms}) as response:
                 resultjson = await response.json()
 
             async with session.get(
-                baseurl + resultjson["response"]["hits"][0]["result"]["api_path"],
-                headers=header,
+                baseurl + resultjson["response"]["hits"][0]["result"]["api_path"], headers=header
             ) as response:
                 songjson = await response.json()
 
@@ -54,11 +49,7 @@ class Genius:
 
         try:
             if len(lyrics) <= 1000:
-                embed.add_field(
-                    name=f"Lyrics for '{songtitle}' by '{songartist}':",
-                    value=lyrics,
-                    inline=False,
-                )
+                embed.add_field(name=f"Lyrics for '{songtitle}' by '{songartist}':", value=lyrics, inline=False)
                 await ctx.send(embed=embed)
             else:
                 for i in range(0, len(lyrics), 1000):
@@ -69,17 +60,13 @@ class Genius:
                     if not i == list(range(0, len(lyrics), 1000))[0]:
                         embedcontent = "..." + embedcontent
                     embed.add_field(
-                        name=f"Lyrics for '{songtitle}' by '{songartist}':",
-                        value=embedcontent,
-                        inline=False,
+                        name=f"Lyrics for '{songtitle}' by '{songartist}':", value=embedcontent, inline=False
                     )
                     await ctx.send(embed=embed)
 
         except AttributeError:  # No lyrics, artist, title, song etc.
             embed.add_field(
-                name="Something went wrong...",
-                value="Oops, something broke. Try another song.",
-                inline=False,
+                name="Something went wrong...", value="Oops, something broke. Try another song.", inline=False
             )
             await ctx.send(embed=embed)
 

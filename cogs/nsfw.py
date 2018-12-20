@@ -16,19 +16,15 @@ class NSFW:
     async def rule34(self, ctx, *, tags):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=f"{self.bot.KAEBOT_VERSION} | Searched tags: {tags}")
-        embed.set_author(
-            name=f"Random result for '{tags}':", icon_url=self.bot.user.avatar_url
-        )
+        embed.set_author(name=f"Random result for '{tags}':", icon_url=self.bot.user.avatar_url)
         if ctx.channel.is_nsfw():
             async with ctx.channel.typing():
                 async with aiohttp.ClientSession() as session:
-                    posturl = f"https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags={tags.replace(' ', '+')}&limit=100"
+                    posturl = (
+                        f"https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags={tags.replace(' ', '+')}&limit=100"
+                    )
                     async with session.post(posturl) as response:
-                        postdict = json.loads(
-                            json.dumps(
-                                xmltodict.parse((await response.read()).decode("utf-8"))
-                            )
-                        )
+                        postdict = json.loads(json.dumps(xmltodict.parse((await response.read()).decode("utf-8"))))
                         try:
                             randompost = random.choice(postdict["posts"]["post"])
                         except KeyError:
@@ -52,17 +48,13 @@ class NSFW:
             if ctx.channel.is_nsfw():
                 embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
                 embed.set_footer(text=self.bot.KAEBOT_VERSION)
-                embed.set_author(
-                    name="KaeBot", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png"
-                )
+                embed.set_author(name="KaeBot", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
                 subcommands = ""
                 for comm in NSFW.nhentai.commands:
                     subcommands += comm.name
                 embed.add_field(
-                    name="No command specified.",
-                    value=f"Please specify a subcommand: {subcommands}",
-                    inline=False,
+                    name="No command specified.", value=f"Please specify a subcommand: {subcommands}", inline=False
                 )
                 await ctx.send(embed=embed)
             else:

@@ -13,10 +13,7 @@ with open("resources/kaeinfo.json", "r") as f:
 async def prefix(instance, msg):
     async with bot.kaedb.acquire() as conn:
         async with conn.transaction():
-            result = await conn.fetch(
-                "SELECT prefix FROM server_prefixes WHERE server_id = $1",
-                str(msg.guild.id),
-            )
+            result = await conn.fetch("SELECT prefix FROM server_prefixes WHERE server_id = $1", str(msg.guild.id))
     prefixes = []
     for record in result:
         prefixes.append(dict(record)["prefix"])
@@ -26,9 +23,7 @@ async def prefix(instance, msg):
 bot = commands.Bot(
     description=f"Made by TSHMN. Version: KaeBot Beta",
     command_prefix=prefix,
-    activity=discord.Streaming(
-        name="TSHMN's bot | Default prefix: kae", url="https://twitch.tv/monky"
-    ),
+    activity=discord.Streaming(name="TSHMN's bot | Default prefix: kae", url="https://twitch.tv/monky"),
 )
 
 
@@ -49,12 +44,7 @@ async def on_ready():
         bot.PSQLUSER = data["psqluser"]
         bot.PSQLPASS = data["psqlpass"]
         bot.TRAVITIAKEY = data["travitiakey"]
-    bot.credentials = {
-        "user": bot.PSQLUSER,
-        "password": bot.PSQLPASS,
-        "database": "kaebot",
-        "host": "127.0.0.1",
-    }
+    bot.credentials = {"user": bot.PSQLUSER, "password": bot.PSQLPASS, "database": "kaebot", "host": "127.0.0.1"}
     bot.strcommands = []
     for command in bot.commands:
         bot.strcommands.append(str(command))
@@ -62,9 +52,7 @@ async def on_ready():
     print(f"{bot.KAEBOT_VERSION} up and running on botuser {bot.KAEBOT_VERSION}.")
     print(f"Running on {len(bot.guilds)} guilds.")
     print("Initialised strcommands.")
-    bot.kaedb = await asyncpg.create_pool(
-        **bot.credentials, max_inactive_connection_lifetime=5, init=poolinit
-    )
+    bot.kaedb = await asyncpg.create_pool(**bot.credentials, max_inactive_connection_lifetime=5, init=poolinit)
     print(f"Connection to database established: {bot.kaedb}")
 
 
@@ -85,9 +73,7 @@ async def on_guild_join(guild):
 
     async with bot.kaedb.acquire() as conn:
         async with conn.transaction():
-            await conn.execute(
-                "INSERT INTO server_prefixes VALUES ($1, 'kae ')", str(guild.id)
-            )
+            await conn.execute("INSERT INTO server_prefixes VALUES ($1, 'kae ')", str(guild.id))
 
 
 @bot.event
