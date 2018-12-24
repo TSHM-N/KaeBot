@@ -44,16 +44,23 @@ async def on_ready():
         bot.PSQLUSER = data["psqluser"]
         bot.PSQLPASS = data["psqlpass"]
         bot.TRAVITIAKEY = data["travitiakey"]
+        bot.SAUCENAOKEY = data["saucenaokey"]
     bot.credentials = {"user": bot.PSQLUSER, "password": bot.PSQLPASS, "database": "kaebot", "host": "127.0.0.1"}
     bot.strcommands = []
     for command in bot.commands:
         bot.strcommands.append(str(command))
 
-    print(f"{bot.KAEBOT_VERSION} up and running on botuser {bot.KAEBOT_VERSION}.")
-    print(f"Running on {len(bot.guilds)} guilds.")
+    print(f"{bot.KAEBOT_VERSION} up and running. Running on {len(bot.guilds)} guilds.")
     print("Initialised strcommands.")
     bot.kaedb = await asyncpg.create_pool(**bot.credentials, max_inactive_connection_lifetime=5, init=poolinit)
     print(f"Connection to database established: {bot.kaedb}")
+
+
+@bot.check
+async def exilecheck(ctx):
+    async with bot.kaedb.acquire() as conn:
+        async with conn.transaction():
+            return not await conn.fetch("SELECT * FROM exiled_users WHERE user_id = $1", str(ctx.author.id))
 
 
 @bot.event

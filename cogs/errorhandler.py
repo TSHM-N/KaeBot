@@ -15,6 +15,9 @@ class ErrorHandler:
         if hasattr(ctx.command, "on_error"):
             return
 
+        if isinstance(error, commands.CheckFailure):
+            return
+
         if isinstance(error, commands.CommandNotFound):
             try:
                 invalidcommand = re.findall(r"\"([^\"]*)\"", error.args[0])[0]
