@@ -67,6 +67,26 @@ class BotOwner:
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nBot Owner\n```")
 
+    @commands.command(name="exilelist", brief="View all exiled users.",
+                      description="View all exiled users. Any user can use this command.")
+    async def exilelist(self, ctx):
+        embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
+        embed.set_footer(text=self.bot.KAEBOT_VERSION)
+        async with self.bot.kaedb.acquire() as conn:
+            async with conn.transaction():
+                exiles = await conn.fetch("SELECT * FROM exiled_users")
+
+        embedcontent = ""
+        if not exiles:
+            embedcontent = "No exiled users."
+        else:
+            for exile in exiles:
+                embedcontent += f"{self.bot.get_user(int(exile['user_id'])).name}\n"
+        embed.add_field(name="Exiled users:",
+                        value=embedcontent,
+                        inline=False)
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(BotOwner(bot))
