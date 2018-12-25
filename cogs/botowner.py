@@ -25,7 +25,7 @@ class BotOwner:
         if await self.bot.is_owner(ctx.author):
             await ctx.send("Restarting...")
             # hacky af BUT it works
-            os.system("py .\KBRestartHax.py")
+            os.system("py KBRestartHax.py")
             await self.bot.kaedb.close()
             await self.bot.logout()
         else:
