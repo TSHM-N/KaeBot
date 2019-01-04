@@ -91,11 +91,13 @@ async def on_guild_remove(guild):
 
 
 cogs = []
-for file in os.listdir(".\cogs"):
+for file in os.listdir("cogs"):
     if file.endswith(".py"):
         cogs.append(f"cogs.{file[:-3]}")
 
 for cog in cogs:
+    if cog == "cogs.errorhandler":
+        continue
     bot.load_extension(cog)
 bot.load_extension("jishaku")
 

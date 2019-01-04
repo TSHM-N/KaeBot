@@ -1,24 +1,36 @@
 import discord
 from discord.ext import commands
-import json, asyncio, random, difflib
+import json, asyncio, random, difflib, asyncpg
+from abc import ABC, abstractmethod
+
+# these classes are made for convenience and scalability
+# note that damagecalc is always to calculate outgoing (dealt) damage, not incoming (taken) damage
 
 
-class KaeRPG:
-    def __init__(self, bot):
+class Character(ABC):
+    @abstractmethod
+    async def damagecalc(self, resistance: int):
+        pass
+
+
+class Player(Character):
+    def __init__(self, bot, playerrecord: asyncpg.Record):
         self.bot = bot
 
-    with open("cogs/kaerpg/kaerpg_items.json", "r") as f:
-        items = json.load(f)
+        self.name = playerrecord["name"]
+        self.stats = playerrecord["stats"]  # Note that these will all be str digits; cast to int if using numerically
+        self.items = playerrecord["items"]
+        self.equipped = playerrecord["equipped"]
 
-    with open("cogs/kaerpg/kaerpg_enemies.json", "r") as f:
-        dungeons = json.load(f)["Dungeons"]
-        f.seek(0)
-        enemies = json.load(f)["Enemies"]
+        self.hp = float(self.stats["CON"]) * 2 - (float(self.stats["CON"]) * 0.05)
+        self.maxhp = self.hp
+        self.consumables = [item for item in self.items if item in KaeRPG.items["Consumables"]]
 
-    @staticmethod
-    async def playerdamagecalc(
-        self, weapondamage: int, weaponscaling: dict, characterstats: dict, enemyresistance: int
-    ):
+    async def damagecalc(self, enemyresistance: int):
+        characterstats = self.stats
+        weapondamage = KaeRPG.items["Weapons"][self.equipped["weapon"]]["Damage"]
+        weaponscaling = KaeRPG.items["Weapons"][self.equipped["weapon"]]["Scaling"]
+
         scalingmultiplier = {}
         for key, val in weaponscaling.items():
             if val == "A":
@@ -45,14 +57,6 @@ class KaeRPG:
         )
         return finaldamage if finaldamage >= 0 else 0
 
-    @staticmethod
-    async def enemydamagecalc(self, enemydamage: int, playerprotection: int):
-        finaldamage = round(
-            enemydamage + random.uniform(enemydamage * 0.2, enemydamage * 0.5) - playerprotection / 3, 2
-        )
-        return finaldamage if finaldamage >= 0 else 0
-
-    @staticmethod
     async def levelup(self, ctx):
         async with self.bot.kaedb.acquire() as conn:
             async with conn.transaction():
@@ -66,30 +70,110 @@ class KaeRPG:
                 )
         await ctx.send(f"You levelled up! You are now level {currentlevel + 1}.")
 
+
+class Enemy(Character):
+    def __init__(self, bot, enemyname: str, enemydict: dict):
+        self.bot = bot
+
+        self.name = enemyname
+        self.hp = enemydict["Health"]
+        self.resistance = enemydict["Resistance"]
+        self.damage = enemydict["Damage"]
+        self.agility = enemydict["Agility"]
+
+        self.maxhp = self.hp
+
+    async def damagecalc(self, playerprotection: int):
+        finaldamage = round(
+            self.damage + random.uniform(self.damage * 0.2, self.damage * 0.5) - playerprotection / 3, 2
+        )
+        return finaldamage if finaldamage >= 0 else 0
+
+
+class Dungeon:
+    def __init__(self, bot, dungeonname: str, dungeondict: dict):
+        self.bot = bot
+
+        self.name = dungeonname
+        self.enemies = dungeondict["Enemies"]
+        self.enemycount = dungeondict["Number of Enemies"]
+        self.bosses = dungeondict["Bosses"]
+
+
+class KaeRPG:
+    def __init__(self, bot):
+        self.bot = bot
+
+    with open("cogs/kaerpg/kaerpg_items.json", "r") as f:
+        items = json.load(f)
+
+    with open("cogs/kaerpg/kaerpg_enemies.json", "r") as f:
+        dungeons = json.load(f)["Dungeons"]
+        f.seek(0)
+        enemies = json.load(f)["Enemies"]
+
     @staticmethod
-    async def battlecontroller(self, ctx, player: dict, dungeon: str):
+    async def battlecontroller(self, ctx, player: Player, dungeon: Dungeon):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
         embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
         actions = ["strike", "guard", "flee", "item"]
-        usable = []
-        for item in player["items"]:
-            if item in KaeRPG.items["Consumables"]:
-                usable.append(item)
-        playerhp = float(player["stats"]["CON"]) * 2 - (float(player["stats"]["CON"]) * 0.05)
-        playermaxhp = playerhp
 
-        for enemyindex in range(1, KaeRPG.dungeons[dungeon]["Number of Enemies"] + 1):
-            enemy = random.choice(KaeRPG.dungeons[dungeon]["Enemies"])
-            enemyhp = KaeRPG.enemies[enemy]["Health"]
-            enemymaxhp = enemyhp
+        for enemyindex in range(1, dungeon.enemycount + 1):
+            enemyname = random.choice(dungeon.enemies)
+            enemy = Enemy(self.bot, enemyname, KaeRPG.enemies[enemyname])
+            embed.add_field(name=f"Enemy {enemyindex} of {dungeon.name}:", value=f"{enemy.name}", inline=False)
+
+            # codes: 0: pass, 1: break (player win), -1: return (player fail)
+            # these codes are interpreted by the caller of the function
+            async def playerturn():
+                if action == "strike":
+                    turndamagedelivered = await player.damagecalc(enemy.resistance)
+                    enemy.hp -= turndamagedelivered
+                    if enemy.hp <= 0:
+                        await ctx.send(
+                            f"\U00002620With a final blow worth {turndamagedelivered:.2f}HP, you kill the {enemy.name}."
+                        )
+                        return 1
+                    else:
+                        await ctx.send(
+                            f"\U00002694You strike the {enemy.name} for {turndamagedelivered:.2f}HP, leaving it "
+                            f"with {enemy.hp:.2f}HP."
+                        )
+                        return 0
+                elif action == "guard":
+                    pass
+                elif action == "flee":
+                    await ctx.send("You fled the dungeon like a coward.")
+                    return -1
+                elif action == "item":
+                    pass
+
+            async def enemyturn():  # should only ever return 0 or -1
+                turndamagetaken = await enemy.damagecalc(
+                    KaeRPG.items["Armour"][player.equipped["armour"]]["Protection"]
+                )
+                player.hp -= turndamagetaken
+                round(player.hp, 2)
+                if player.hp <= 0:
+                    await ctx.send(
+                        f"\U0001f480The {enemy.name} smites you down with a final blow worth "
+                        f"{turndamagetaken:.2f}HP.\nDungeon failed..."
+                    )
+                    return -1
+                else:
+                    await ctx.send(
+                        f"\U00002694{enemy.name} strikes you for {turndamagetaken:.2f}HP, "
+                        f"leaving you with {player.hp:.2f}HP."
+                    )
+                    return 0
+
             turn = 1
-            embed.add_field(name=f"Enemy {enemyindex} of {dungeon}:", value=f"{enemy}", inline=False)
 
             while True:
                 embed.add_field(
-                    name=f"Turn {turn}: You're fighting {enemy} ({enemyhp}/{enemymaxhp}HP).",
-                    value=f"{player['name']}'s health: {playerhp:.2f}/{playermaxhp}HP.\nActions:\n"
+                    name=f"Turn {turn}: You're fighting {enemy.name} ({enemy.hp:.2f}/{enemy.maxhp}HP).",
+                    value=f"{player.name}'s health: {player.hp:.2f}/{player.maxhp}HP.\nActions:\n"
                     f"Strike, Guard, Flee, Item",
                     inline=False,
                 )
@@ -105,102 +189,49 @@ class KaeRPG:
                 action = action.content.lower()
                 assert action in actions
 
-                if int(player["stats"]["AGI"]) > KaeRPG.enemies[enemy]["Agility"]:
-                    if action == "strike":
-                        turndamagedelivered = await KaeRPG.playerdamagecalc(
-                            self,
-                            KaeRPG.items["Weapons"][player["equipped"]["weapon"]]["Damage"],
-                            KaeRPG.items["Weapons"][player["equipped"]["weapon"]]["Scaling"],
-                            player["stats"],
-                            KaeRPG.enemies[enemy]["Resistance"],
-                        )
-                        enemyhp -= turndamagedelivered
-                        if enemyhp <= 0:
-                            await ctx.send(
-                                f"With a final blow worth {turndamagedelivered:.2f}HP, you deliver "
-                                f"the final blow to the {enemy}."
-                            )
-                            break
-                        else:
-                            await ctx.send(
-                                f"You strike the {enemy} for {turndamagedelivered:.2f}HP, leaving it "
-                                f"with {enemyhp}HP."
-                            )
-                    elif action == "guard":
+                if int(player.stats["AGI"]) > enemy.agility:
+                    state = await playerturn()
+                    if state == 0:  # continue (pass)
                         pass
-                    elif action == "flee":
-                        return await ctx.send("You fled the dungeon like a coward.")
-                    elif action == "item":
-                        pass
-
-                    turndamagetaken = await KaeRPG.enemydamagecalc(
-                        self,
-                        KaeRPG.enemies[enemy]["Damage"],
-                        KaeRPG.items["Armour"][player["equipped"]["armour"]]["Protection"],
-                    )
-                    playerhp -= turndamagetaken
-                    round(playerhp, 2)
-                    if playerhp <= 0:
-                        return await ctx.send(
-                            f"The {enemy} smites you dead with a final blow worth "
-                            f"{turndamagetaken:.2f}HP.\nDungeon failed..."
-                        )
+                    elif state == 1:  # break (next pass)
+                        break
+                    elif state == -1:  # fail (return)
+                        return
                     else:
-                        await ctx.send(
-                            f"{enemy} strikes you for {turndamagetaken:.2f}HP, leaving you with {playerhp:.2f}HP."
-                        )
+                        raise NotImplementedError(f"Illegal state {state} (should be 0, 1 or -1)")
 
+                    state = await enemyturn()
+                    if state == 0:  # continue (pass)
+                        pass
+                    elif state == -1:  # fail (return)
+                        return
+                    else:
+                        raise NotImplementedError(f"Illegal state {state} (should be 0 or -1)")
                 else:
-                    turndamagetaken = await KaeRPG.enemydamagecalc(
-                        self,
-                        KaeRPG.enemies[enemy]["Damage"],
-                        KaeRPG.items["Armour"][player["equipped"]["armour"]]["Protection"],
-                    )
-                    playerhp -= turndamagetaken
-                    round(playerhp, 2)
-                    if playerhp <= 0:
-                        return await ctx.send(
-                            f"The {enemy} smites you dead with a final blow worth "
-                            f"{turndamagetaken:.2f}HP.\nDungeon failed..."
-                        )
+                    state = await enemyturn()
+                    if state == 0:  # continue (pass)
+                        pass
+                    elif state == -1:  # fail (return)
+                        return
                     else:
-                        await ctx.send(
-                            f"{enemy} strikes you for {turndamagetaken:.2f}HP, leaving you with {playerhp:.2f}HP."
-                        )
+                        raise NotImplementedError(f"Illegal state {state} (should be 0 or -1)")
 
-                    if action == "strike":
-                        turndamagedelivered = await KaeRPG.playerdamagecalc(
-                            self,
-                            KaeRPG.items["Weapons"][player["equipped"]["weapon"]]["Damage"],
-                            KaeRPG.items["Weapons"][player["equipped"]["weapon"]]["Scaling"],
-                            player["stats"],
-                            KaeRPG.enemies[enemy]["Resistance"],
-                        )
-                        enemyhp -= turndamagedelivered
-                        if enemyhp <= 0:
-                            await ctx.send(
-                                f"With a final blow worth {turndamagedelivered}HP, you deliver "
-                                f"the final blow to the {enemy}."
-                            )
-                            break
-                        else:
-                            await ctx.send(
-                                f"You strike the {enemy} for {turndamagedelivered}HP, leaving it" f"with {enemyhp}HP."
-                            )
-                    elif action == "guard":
+                    state = await playerturn()
+                    if state == 0:  # continue (pass)
                         pass
-                    elif action == "flee":
-                        return await ctx.send("You fled the dungeon like a coward.")
-                    elif action == "item":
-                        pass
-
+                    elif state == 1:  # break (next pass)
+                        break
+                    elif state == -1:  # fail (return)
+                        return
+                    else:
+                        raise NotImplementedError(f"Illegal state {state} (should be 0, 1 or -1)")
                 turn += 1
             experience = int(
-                KaeRPG.enemies[enemy]["Health"]
-                + KaeRPG.enemies[enemy]["Damage"]
-                + KaeRPG.enemies[enemy]["Resistance"] / 3
+                (enemy.maxhp
+                 + enemy.damage
+                 + enemy.resistance) * (1/3)
             )
-            await ctx.send(f"You earned {experience}XP from killing {enemy}.")
+            await ctx.send(f"\U00002747You earned {experience}XP from killing {enemy.name}.")
 
     @commands.group(
         name="kaerpg",
@@ -634,23 +665,23 @@ class KaeRPG:
             await ctx.send("You don't have a character. Use 'prefix kaerpg makecharacter' to make one.")
 
     @kaerpg.command(name="raid", brief="Raid a dungeon!", description="Raid a dungeon!")
-    async def raid(self, ctx, *, dungeon: str):
+    async def raid(self, ctx, *, dungeonstr: str):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
         embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
         async with self.bot.kaedb.acquire() as conn:
             async with conn.transaction():
-                player = await conn.fetchrow(
+                playerrecord = await conn.fetchrow(
                     "SELECT * FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)
                 )
-                if player:
+                if playerrecord:
                     try:  # Test this dungeon exists
-                        KaeRPG.dungeons[dungeon]
+                        KaeRPG.dungeons[dungeonstr]
                     except KeyError:
                         return await ctx.send("That's not a KaeRPG dungeon.")
                     if (
-                        KaeRPG.dungeons[dungeon]["Minlevel"]
+                        KaeRPG.dungeons[dungeonstr]["Minlevel"]
                         > (
                             await conn.fetchrow(
                                 "SELECT level FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)
@@ -658,15 +689,17 @@ class KaeRPG:
                         )["level"]
                     ):
                         return await ctx.send(
-                            f"Your level is too low for this dungeon (required level: {KaeRPG.dungeons[dungeon]['Minlevel']})."
+                            f"Your level is too low for this dungeon (required level: {KaeRPG.dungeons[dungeonstr]['Minlevel']})."
                         )
                     embed.add_field(
-                        name=f"Starting a Raid on {dungeon}!", value="Raid starting in 5 seconds...", inline=False
+                        name=f"Starting a Raid on {dungeonstr}!", value="Raid starting in 5 seconds...", inline=False
                     )
                     await ctx.send(embed=embed)
                     embed.clear_fields()
                     await asyncio.sleep(5)
-                    await KaeRPG.battlecontroller(self, ctx, player, dungeon)
+                    playerobj = Player(self.bot, playerrecord)
+                    dungeonobj = Dungeon(self.bot, dungeonstr, KaeRPG.dungeons[dungeonstr])
+                    await KaeRPG.battlecontroller(self, ctx, playerobj, dungeonobj)
 
                 else:
                     await ctx.send(
