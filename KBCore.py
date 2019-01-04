@@ -96,8 +96,6 @@ for file in os.listdir("cogs"):
         cogs.append(f"cogs.{file[:-3]}")
 
 for cog in cogs:
-    if cog == "cogs.errorhandler":
-        continue
     bot.load_extension(cog)
 bot.load_extension("jishaku")
 
