@@ -12,6 +12,11 @@ class ErrorHandler:
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
         embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
+        async with self.bot.kaedb.acquire() as conn:
+            async with conn.transaction():
+                if conn.fetchrow("SELECT * FROM exiled_users WHERE user_id = $1", str(ctx.author.id)):
+                    return
+
         if hasattr(ctx.command, "on_error"):
             return
 
