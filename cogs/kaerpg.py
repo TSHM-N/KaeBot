@@ -18,18 +18,21 @@ class Player(Character):
         self.bot = bot
 
         self.name = playerrecord["name"]
+        self.level = playerrecord["level"]
         self.stats = playerrecord["stats"]  # Note that these will all be str digits; cast to int if using numerically
         self.items = playerrecord["items"]
-        self.equipped = playerrecord["equipped"]
+        self.equipped = playerrecord["equipped"]  # Note that these are str, not Weapon/Armour
+        self.exp = playerrecord["exp"]
+        self.kaecoins = playerrecord["kaecoins"]
 
         self.hp = float(self.stats["CON"]) * 2 - (float(self.stats["CON"]) * 0.05)
         self.maxhp = self.hp
-        self.consumables = [item for item in self.items if item in KaeRPG.items["Consumables"]]
 
     async def damagecalc(self, enemyresistance: int):
         characterstats = self.stats
-        weapondamage = KaeRPG.items["Weapons"][self.equipped["weapon"]]["Damage"]
-        weaponscaling = KaeRPG.items["Weapons"][self.equipped["weapon"]]["Scaling"]
+        equippedobj = next((weapon for weapon in KaeRPG.weapons if weapon.name == self.equipped["weapon"]))
+        weapondamage = equippedobj.damage
+        weaponscaling = equippedobj.scaling
 
         scalingmultiplier = {}
         for key, val in weaponscaling.items():
@@ -104,12 +107,60 @@ class Dungeon:
         self.bosses = dungeondict["Bosses"]
 
 
+class Item(ABC):
+    pass
+
+
+class Weapon(Item):
+    def __init__(self, name, itemdict):
+        self.name = name
+        self.rank = itemdict["Rank"]
+        self.damage = itemdict["Damage"]
+        self.scaling = itemdict["Scaling"]
+        self.info = itemdict["Info"]
+
+
+class Armour(Item):
+    def __init__(self, name, itemdict):
+        self.name = name
+        self.protection = itemdict["Protection"]
+        self.weight = itemdict["Weight"]
+        self.info = itemdict["Info"]
+
+
+class Consumable(Item):
+    def __init__(self, name, itemdict):
+        self.name = name
+        self.value = itemdict["Value"]
+        self.effect = itemdict["Effect"]
+        self.info = itemdict["Info"]
+
+
 class KaeRPG:
     def __init__(self, bot):
         self.bot = bot
 
     with open("cogs/kaerpg/kaerpg_items.json", "r") as f:
-        items = json.load(f)
+        items = []
+        weapons = []
+        armour = []
+        consumables = []
+        _rawitems = json.load(f)
+
+        for item in _rawitems["Weapons"]:
+            weapon = Weapon(item, _rawitems["Weapons"][item])
+            items.append(weapon)
+            weapons.append(weapon)
+
+        for item in _rawitems["Armour"]:
+            armour = Weapon(item, _rawitems["Armour"][item])
+            items.append(armour)
+            weapons.append(armour)
+
+        for item in _rawitems["Consumables"]:
+            consumable = Weapon(item, _rawitems["Consumables"][item])
+            items.append(consumable)
+            consumables.append(consumable)
 
     with open("cogs/kaerpg/kaerpg_enemies.json", "r") as f:
         dungeons = json.load(f)["Dungeons"]
@@ -154,9 +205,7 @@ class KaeRPG:
                     pass
 
             async def enemyturn():  # should only ever return 0 or -1
-                turndamagetaken = await enemy.damagecalc(
-                    KaeRPG.items["Armour"][player.equipped["armour"]]["Protection"]
-                )
+                turndamagetaken = await enemy.damagecalc(player.equipped)
                 player.hp -= turndamagetaken
                 round(player.hp, 2)
                 if player.hp <= 0:
@@ -230,12 +279,9 @@ class KaeRPG:
                     else:
                         raise NotImplementedError(f"Illegal state {state} (should be 0, 1 or -1)")
                 turn += 1
-            experience = int(
-                (enemy.maxhp
-                 + enemy.damage
-                 + enemy.resistance) * (1/3)
-            )
-            await ctx.send(f"\U00002747You earned {experience}XP from killing {enemy.name}.")
+            rawexp = round((enemy.maxhp + enemy.damage + enemy.resistance) * (1/3))
+            gainedexp = rawexp + round(random.uniform(rawexp * -0.25, rawexp * 0.25))
+            await ctx.send(f"\U00002747You earned {gainedexp}XP from killing {enemy.name}.")
 
     @commands.group(
         name="kaerpg",
@@ -335,14 +381,15 @@ class KaeRPG:
 
                     startweapons = ""
                     for weapon in ["Lumber's Axe", "Makeshift Shiv", "Hunter's Bow", "Tattered Scroll"]:
-                        startweapons += f"{weapon}:\n"
-                        startweapons += f"Rank: {KaeRPG.items['Weapons'][weapon]['Rank']}\n"
-                        startweapons += f"Damage: {KaeRPG.items['Weapons'][weapon]['Damage']}\n"
+                        weaponobj = next((weap for weap in KaeRPG.weapons if weap.name == weapon))
+                        startweapons += f"{weaponobj.name}:\n"
+                        startweapons += f"Rank: {weaponobj.rank}\n"
+                        startweapons += f"Damage: {weaponobj.damage}\n"
                         startweapons += "Scaling: "
-                        for stat, scale in KaeRPG.items["Weapons"][weapon]["Scaling"].items():
+                        for stat, scale in weaponobj.scaling.items():
                             startweapons += f"{stat} {scale} / "
                         startweapons = startweapons[:-3] + "\n"
-                        startweapons += f"Info: {KaeRPG.items['Weapons'][weapon]['Info']}"
+                        startweapons += f"Info: {weaponobj.info}"
                         if not weapon == "Tattered Scroll":
                             startweapons += "\n\n"
                     embed.add_field(name="Starting weapon choices:", value=startweapons, inline=False)
@@ -364,17 +411,19 @@ class KaeRPG:
 
                     startarmour = ""
                     for armour in ["Leather Carapace", "Warrior's Mail", "Rusted Paladin's Armour"]:
-                        startarmour += f"{armour}:\n"
-                        startarmour += f"Rank: {KaeRPG.items['Armour'][armour]['Rank']}\n"
-                        startarmour += f"Protection: {KaeRPG.items['Armour'][armour]['Protection']}\n"
-                        startarmour += f"Type: {KaeRPG.items['Armour'][armour]['Type']}\n"
-                        startarmour += f"Info: {KaeRPG.items['Armour'][armour]['Info']}"
+                        armourobj = next((arm for arm in KaeRPG.armour if arm.name == armour))
+                        startarmour += f"{armourobj.name}:\n"
+                        startarmour += f"Rank: {armourobj.rank}\n"
+                        startarmour += f"Protection: {armourobj.protection}\n"
+                        startarmour += f"Weight: {armourobj.weight}\n"
+                        startarmour += f"Info: {armourobj.info}"
                         if not armour == "Rusted Paladin's Armour":
                             startarmour += "\n\n"
                     embed.add_field(name="Starting armour choices:", value=startarmour, inline=False)
 
                     await ctx.send(
-                        f"Your character is named {name} with the stats {stats} and the weapon {weapon}. What armour will they start with?\n",
+                        f"Your character is named {name} with the stats {stats} and the weapon {weapon}."
+                        f"What armour will they start with?\n",
                         embed=embed,
                     )
                     embed.clear_fields()

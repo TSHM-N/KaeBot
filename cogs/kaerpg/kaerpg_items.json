@@ -228,37 +228,37 @@
         "Leather Carapace": {
             "Rank": "D",
             "Protection": 5,
-            "Type": "Light",
+            "Weight": "Light",
             "Info": "Plain old leather armour. Not constricting, but lacks in physical defense and integrity."
         },
         "Warrior's Mail": {
             "Rank": "D",
             "Protection": 10,
-            "Type": "Medium",
+            "Weight": "Medium",
             "Info": "Just the right weight to let you charge into battle while being decently protected."
         },
         "Rusted Paladin's Armour": {
             "Rank": "D",
             "Protection": 15,
-            "Type": "Heavy",
+            "Weight": "Heavy",
             "Info": "Heavy iron plating, marred by decades of rust, weighs down upon your shoulders when you wear this."
         },
         "Worn Goblin Tunic": {
             "Rank": "D",
             "Protection": 7,
-            "Type": "Light",
+            "Weight": "Light",
             "Info": "It reeks of sweaty Goblin, but is hardened with natural material and leather."
         },
         "Damp, Muddy Tunic": {
             "Rank": "D",
             "Protection": 12,
-            "Type": "Medium",
+            "Weight": "Medium",
             "Info": "It was probably an actual chestplate at one point, but its too hard to tell."
         },
         "Treant Bark": {
             "Rank": "D",
             "Protection": 18,
-            "Type": "Heavy",
+            "Weight": "Heavy",
             "Info": "Poor treant. Everything about this screams 'splinters'."
         }
     },
