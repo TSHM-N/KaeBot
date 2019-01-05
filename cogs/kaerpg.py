@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import json, asyncio, random, difflib, asyncpg
+import json, asyncio, random, difflib, asyncpg, math
 from abc import ABC, abstractmethod
 
 # these classes are made for convenience and scalability
@@ -56,6 +56,10 @@ class Player(Character):
             ((weapondamage + rawdamageboost) * (rawdamageboost * 0.1) * critboost + fluctuation) - enemyresistance, 2
         )
         return finaldamage if finaldamage >= 0 else 0
+
+    @staticmethod
+    async def calcrequiredexp(self, threshold):  # threshold is typically current level + 1
+        return math.log(1.2, threshold) + threshold + 7
 
     async def levelup(self, ctx):
         async with self.bot.kaedb.acquire() as conn:
