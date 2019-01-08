@@ -3,7 +3,7 @@
     "_protectionnote": "D: 0-30; C: 30-50; B: 50-75; A: 75-100; S: 100-150; Alpha: 150-200; Beta: 200-250; Omega: 250-300",
     
     "Weapons": {
-        "Lumber's Axe": {
+        "Lumberer's Axe": {
             "Rank": "D",
             "Damage": 18,
             "Scaling": {

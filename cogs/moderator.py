@@ -67,7 +67,7 @@ class Moderator:
     async def purge(self, ctx, limit: int):
         if limit <= 0 or limit > 100:
             return await ctx.send("Invalid range: must be between 0 - 100 messages.")
-        limit += 1
+        await ctx.message.delete()
         await ctx.channel.purge(limit=limit)
 
 

@@ -79,9 +79,7 @@ class Player(Character):
 
 
 class Enemy(Character):
-    def __init__(self, bot, enemyname: str, enemydict: dict):
-        self.bot = bot
-
+    def __init__(self, enemyname: str, enemydict: dict):
         self.name = enemyname
         self.hp = enemydict["Health"]
         self.resistance = enemydict["Resistance"]
@@ -98,12 +96,11 @@ class Enemy(Character):
 
 
 class Dungeon:
-    def __init__(self, bot, dungeonname: str, dungeondict: dict):
-        self.bot = bot
-
+    def __init__(self, dungeonname: str, dungeondict: dict):
         self.name = dungeonname
         self.enemies = dungeondict["Enemies"]
         self.enemycount = dungeondict["Number of Enemies"]
+        self.level = dungeondict["Minlevel"]
         self.bosses = dungeondict["Bosses"]
 
 
@@ -123,6 +120,7 @@ class Weapon(Item):
 class Armour(Item):
     def __init__(self, name, itemdict):
         self.name = name
+        self.rank = itemdict["Rank"]
         self.protection = itemdict["Protection"]
         self.weight = itemdict["Weight"]
         self.info = itemdict["Info"]
@@ -148,24 +146,29 @@ class KaeRPG:
         _rawitems = json.load(f)
 
         for item in _rawitems["Weapons"]:
-            weapon = Weapon(item, _rawitems["Weapons"][item])
-            items.append(weapon)
-            weapons.append(weapon)
+            currentweapon = Weapon(item, _rawitems["Weapons"][item])
+            items.append(currentweapon)
+            weapons.append(currentweapon)
 
         for item in _rawitems["Armour"]:
-            armour = Weapon(item, _rawitems["Armour"][item])
-            items.append(armour)
-            weapons.append(armour)
+            currentarmour = Armour(item, _rawitems["Armour"][item])
+            items.append(currentarmour)
+            armour.append(currentarmour)
 
         for item in _rawitems["Consumables"]:
-            consumable = Weapon(item, _rawitems["Consumables"][item])
-            items.append(consumable)
-            consumables.append(consumable)
+            currentconsumable = Consumable(item, _rawitems["Consumables"][item])
+            items.append(currentconsumable)
+            consumables.append(currentconsumable)
 
     with open("cogs/kaerpg/kaerpg_enemies.json", "r") as f:
-        dungeons = json.load(f)["Dungeons"]
-        f.seek(0)
-        enemies = json.load(f)["Enemies"]
+        dungeons = []
+        enemies = []
+
+        _rawitems = json.load(f)
+        for dungeon in _rawitems["Dungeons"]:
+            dungeons.append(Dungeon(dungeon, _rawitems["Dungeons"][dungeon]))
+        for enemy in _rawitems["Enemies"]:
+            enemies.append(Enemy(enemy, _rawitems["Enemies"][enemy]))
 
     @staticmethod
     async def battlecontroller(self, ctx, player: Player, dungeon: Dungeon):
@@ -176,7 +179,7 @@ class KaeRPG:
 
         for enemyindex in range(1, dungeon.enemycount + 1):
             enemyname = random.choice(dungeon.enemies)
-            enemy = Enemy(self.bot, enemyname, KaeRPG.enemies[enemyname])
+            enemy = next(e for e in KaeRPG.enemies if e.name == enemyname)
             embed.add_field(name=f"Enemy {enemyindex} of {dungeon.name}:", value=f"{enemy.name}", inline=False)
 
             # codes: 0: pass, 1: break (player win), -1: return (player fail)
@@ -222,7 +225,6 @@ class KaeRPG:
                     return 0
 
             turn = 1
-
             while True:
                 embed.add_field(
                     name=f"Turn {turn}: You're fighting {enemy.name} ({enemy.hp:.2f}/{enemy.maxhp}HP).",
@@ -380,8 +382,8 @@ class KaeRPG:
                             break
 
                     startweapons = ""
-                    for weapon in ["Lumber's Axe", "Makeshift Shiv", "Hunter's Bow", "Tattered Scroll"]:
-                        weaponobj = next((weap for weap in KaeRPG.weapons if weap.name == weapon))
+                    for weapon in ["Lumberer's Axe", "Makeshift Shiv", "Hunter's Bow", "Tattered Scroll"]:
+                        weaponobj = next((x for x in KaeRPG.weapons if x.name == weapon), None)
                         startweapons += f"{weaponobj.name}:\n"
                         startweapons += f"Rank: {weaponobj.rank}\n"
                         startweapons += f"Damage: {weaponobj.damage}\n"
@@ -404,14 +406,14 @@ class KaeRPG:
                             "message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel
                         )
                         weapon = weapon.content
-                        if weapon not in ["Lumber's Axe", "Makeshift Shiv", "Hunter's Bow", "Tattered Scroll"]:
+                        if weapon not in ["Lumberer's Axe", "Makeshift Shiv", "Hunter's Bow", "Tattered Scroll"]:
                             await ctx.send("That's not one of the specified starting weapons.")
                         else:
                             break
 
                     startarmour = ""
                     for armour in ["Leather Carapace", "Warrior's Mail", "Rusted Paladin's Armour"]:
-                        armourobj = next((arm for arm in KaeRPG.armour if arm.name == armour))
+                        armourobj = next((x for x in KaeRPG.armour if x.name == armour), None)
                         startarmour += f"{armourobj.name}:\n"
                         startarmour += f"Rank: {armourobj.rank}\n"
                         startarmour += f"Protection: {armourobj.protection}\n"
@@ -422,7 +424,7 @@ class KaeRPG:
                     embed.add_field(name="Starting armour choices:", value=startarmour, inline=False)
 
                     await ctx.send(
-                        f"Your character is named {name} with the stats {stats} and the weapon {weapon}."
+                        f"Your character is named {name} with the stats {stats} and the weapon {weapon}. "
                         f"What armour will they start with?\n",
                         embed=embed,
                     )
@@ -497,50 +499,29 @@ class KaeRPG:
     async def iteminfo(self, ctx, *, item: str):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name=f"KaeRPG: Info for '{item}'", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
-        if item in KaeRPG.items["Weapons"].keys():  # If in weapon list:
-            itemdict = KaeRPG.items["Weapons"][item]
-            embedcontent = f"Rank: {itemdict['Rank']}\n"
-            embedcontent += f"Damage: {itemdict['Damage']}\n"
-            embedcontent += "Scaling: "
-            for scale in itemdict["Scaling"]:
-                if scale == "ARC":
-                    embedcontent += f"{scale} {itemdict['Scaling'][scale]}"
+        itemobj = next((x for x in KaeRPG.items if x.name == item), None)
+        if itemobj:  # If in item list:
+            attributes = list(filter(lambda x: not x.startswith("_") and not x == "name", dir(itemobj)))
+            for attr in attributes:
+                content = getattr(itemobj, attr)
+                if isinstance(content, dict):  # if scaling
+                    stringcontent = ""
+                    for stat, scale in content.items():
+                        stringcontent += f"{stat} {scale} / "
+                    embed.add_field(name=attr.capitalize(), value=stringcontent[:-3], inline=True)
                 else:
-                    embedcontent += f"{scale} {itemdict['Scaling'][scale]} / "
-            embedcontent += f"\nInfo: *{itemdict['Info']}*"
-
-            embed.add_field(name=item, value=embedcontent, inline=False)
-            await ctx.send(embed=embed)
-
-        elif item in KaeRPG.items["Armour"].keys():  # If in armour list:
-            itemdict = KaeRPG.items["Armour"][item]
-            embedcontent = f"Rank: {itemdict['Rank']}\n"
-            embedcontent += f"Protection: {itemdict['Protection']}\n"
-            embedcontent += f"Type: {itemdict['Type']}\n"
-            embedcontent += f"Info: *{itemdict['Info']}*"
-
-            embed.add_field(name=item, value=embedcontent, inline=False)
-            await ctx.send(embed=embed)
-
-        elif item in KaeRPG.items["Consumables"]:  # If in consumables list:
-            itemdict = KaeRPG.items["Consumables"][item]
-            embedcontent = f"Value: {itemdict['Value']}\n"
-            embedcontent += f"Effect: {itemdict['Effect']}\n"
-            embedcontent += f"Info: *{itemdict['Info']}*"
-
-            embed.add_field(name=item, value=embedcontent, inline=False)
-            await ctx.send(embed=embed)
-
+                    embed.add_field(name=attr.capitalize(), value=content, inline=True)
         else:
-            similaritems = difflib.get_close_matches(item, KaeRPG.items["Weapons"].keys(), n=5, cutoff=0.6)
+            names = list(map(lambda x: x.name, KaeRPG.items))
+            similaritems = difflib.get_close_matches(item, names, n=5, cutoff=0.6)
             embedcontent = ""
             for similar in similaritems:
                 embedcontent += f"{similar}\n"
             embedcontent = embedcontent if embedcontent else "No similar matches found."
             embed.add_field(name="No matches found. Did you mean:", value=embedcontent, inline=False)
-            await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
     @kaerpg.command(
         name="characterlist",
@@ -559,7 +540,7 @@ class KaeRPG:
         for record in charlist:
             embedcontent += f"{record['name']} | {self.bot.get_user(int(record['user_id'])).display_name} |"
             embedcontent += f" {self.bot.get_user(int(record['user_id'])).id}\n"
-        embed.add_field(name="Character List", value=embedcontent, inline=False)
+        embed.add_field(name="KaeRPG Character List", value=embedcontent, inline=False)
         await ctx.send(embed=embed)
 
     @kaerpg.command(
@@ -573,39 +554,36 @@ class KaeRPG:
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
         embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
-        embed.set_thumbnail(url=ctx.author.avatar_url)
-
         if user is None:
             user = ctx.author
+        embed.set_thumbnail(url=user.avatar_url)
+
         async with self.bot.kaedb.acquire() as conn:
             async with conn.transaction():
                 rawinfo = await conn.fetchrow("SELECT * FROM kaerpg_characterinfo WHERE user_id = $1", str(user.id))
         if rawinfo is None:  # No info exists, aka no character
             return await ctx.send("This user doesn't have a KaeRPG character.")
 
-        stats = ""
-        for key, val in rawinfo["stats"].items():
-            stats += f"{key} {val} / "
-        stats = stats[:-3]
-        items = ""
-        for item in rawinfo["items"]:
-            items += f"{item}, "
-        items = items[:-2]
-        kaecoins = rawinfo["kaecoins"]
-        equipped = ""
-        for equipment in rawinfo["equipped"].values():
-            equipped += f"{equipment}, "
-        equipped = equipped[:-2]
+        character = Player(self.bot, rawinfo)
+        statstring = ""
+        for statname, stat in character.stats.items():
+            statstring += f"{statname} {stat} / "
+        itemstring = ""
+        for item in character.items:
+            itemstring += f"{item}, "
+        equippedstring = ""
+        for item in character.equipped.values():
+            equippedstring += f"{item} & "
 
         embed.add_field(
             name=f"Character Information for {user.display_name}:",
-            value=f"Character Name: {rawinfo['name']}\n"
-            f"Level: {rawinfo['level']}\n"
-            f"Current EXP: {rawinfo['exp']}\n"
-            f"Stats: {stats}\n"
-            f"Items: {items}\n"
-            f"Equipped: {equipped}\n"
-            f"KaeCoins: {kaecoins}",
+            value=f"Character Name: {character.name}\n"
+            f"Level: {character.level}\n"
+            f"Current EXP: {character.exp}\n"
+            f"Stats: {statstring[:-3]}\n"
+            f"Items: {itemstring[:-2]}\n"
+            f"Equipped: {equippedstring[:-3]}\n"
+            f"KaeCoins: {character.kaecoins}",
             inline=False,
         )
         await ctx.send(embed=embed)
@@ -619,8 +597,8 @@ class KaeRPG:
         embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
         embedcontent = ""
         for dungeon in KaeRPG.dungeons:
-            embedcontent += f"{dungeon} (minimum level: {KaeRPG.dungeons[dungeon]['Minlevel']}, number of enemies:"
-            embedcontent += f" {KaeRPG.dungeons[dungeon]['Number of Enemies']}, number of bosses: {len(KaeRPG.dungeons[dungeon]['Bosses'])})\n"
+            embedcontent += f"{dungeon.name} (minimum level: {dungeon.level}, number of enemies:"
+            embedcontent += f" {dungeon.enemycount}, number of bosses: {len(dungeon.bosses)})\n"
         embed.add_field(name="Dungeon List:", value=embedcontent, inline=False)
         await ctx.send(embed=embed)
 
@@ -635,8 +613,8 @@ class KaeRPG:
         embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
         embedcontent = dict.fromkeys(["Omega", "Beta", "Alpha", "S", "A", "B", "C", "D"], "")
-        for item in KaeRPG.items["Weapons"]:
-            embedcontent[KaeRPG.items["Weapons"][item]["Rank"]] += f"{item}, "
+        for item in KaeRPG.weapons:
+            embedcontent[item.rank] += f"{item.name}, "
 
         for rank, content in embedcontent.items():
             if content.endswith(", "):
@@ -644,14 +622,8 @@ class KaeRPG:
             content = content if content else "No items of this rank exist."
             embedcontent[rank] = content
 
-        embed.add_field(name="Omega Rank:", value=embedcontent["Omega"], inline=False)
-        embed.add_field(name="Beta Rank:", value=embedcontent["Beta"], inline=False)
-        embed.add_field(name="Alpha Rank:", value=embedcontent["Alpha"], inline=False)
-        embed.add_field(name="S Rank:", value=embedcontent["S"], inline=False)
-        embed.add_field(name="A Rank:", value=embedcontent["A"], inline=False)
-        embed.add_field(name="B Rank:", value=embedcontent["B"], inline=False)
-        embed.add_field(name="C Rank:", value=embedcontent["C"], inline=False)
-        embed.add_field(name="D Rank:", value=embedcontent["D"], inline=False)
+        for key, value in embedcontent.items():
+            embed.add_field(name=f"{key} Rank:", value=value, inline=False)
         await ctx.send(embed=embed)
 
     @kaerpg.command(
@@ -665,8 +637,8 @@ class KaeRPG:
         embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
         embedcontent = dict.fromkeys(["Omega", "Beta", "Alpha", "S", "A", "B", "C", "D"], "")
-        for item in KaeRPG.items["Armour"]:
-            embedcontent[KaeRPG.items["Armour"][item]["Rank"]] += f"{item}, "
+        for item in KaeRPG.armour:
+            embedcontent[item.rank] += f"{item.name}, "
 
         for rank, content in embedcontent.items():
             if content.endswith(", "):
@@ -674,9 +646,8 @@ class KaeRPG:
             content = content if content else "No items of this rank exist."
             embedcontent[rank] = content
 
-        for key in embedcontent.keys():
-            embed.add_field(name=f"{key} Rank:", value=embedcontent[key], inline=False)
-
+        for key, value in embedcontent.items():
+            embed.add_field(name=f"{key} Rank:", value=value, inline=False)
         await ctx.send(embed=embed)
 
     @kaerpg.command(name="equip", brief="Equip an item.", description="Equip an item from your KaeRPG inventory.")
@@ -687,29 +658,22 @@ class KaeRPG:
                     "SELECT * FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)
                 )
         if player:
-            equipment = player["equipped"]
-            equipment = equipment if equipment else {}
+            player = Player(self.bot, player)
 
-            equippableweapons = []
-            equippablearmour = []
-            for item in player["items"]:
-                if item in KaeRPG.items["Weapons"]:
-                    equippableweapons.append(item)
-                elif item in KaeRPG.items["Armour"]:
-                    equippablearmour.append(item)
-
-            if toequip in equippableweapons:
-                equipment["weapon"] = toequip
-            elif toequip in equippablearmour:
-                equipment["armour"] = toequip
+            if toequip in next(x for x in KaeRPG.weapons if x.name == toequip).name:
+                player.equipped["weapon"] = toequip
+                itemtype = "weapon"
+            elif toequip in next(x for x in KaeRPG.armour if x.name == toequip).name:
+                player.equipped["armour"] = toequip
+                itemtype = "armour"
             else:
-                return await ctx.send("That is not a valid, equippable item (is it in your inventory)?")
+                return await ctx.send("That is not a valid, equippable item. Are you sure it is in your inventory?")
 
             async with self.bot.kaedb.acquire() as conn:
                 async with conn.transaction():
                     await conn.execute(
-                        "UPDATE kaerpg_characterinfo SET equipped = ($1) WHERE user_id = $2",
-                        equipment,
+                        "UPDATE kaerpg_characterinfo SET equipped = $1 WHERE user_id = $2",
+                        player.equipped,
                         str(ctx.author.id),
                     )
             await ctx.send(f"Equipped {toequip}.")
@@ -729,35 +693,23 @@ class KaeRPG:
                     "SELECT * FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)
                 )
                 if playerrecord:
-                    try:  # Test this dungeon exists
-                        KaeRPG.dungeons[dungeonstr]
-                    except KeyError:
-                        return await ctx.send("That's not a KaeRPG dungeon.")
-                    if (
-                        KaeRPG.dungeons[dungeonstr]["Minlevel"]
-                        > (
-                            await conn.fetchrow(
-                                "SELECT level FROM kaerpg_characterinfo WHERE user_id = $1", str(ctx.author.id)
-                            )
-                        )["level"]
-                    ):
-                        return await ctx.send(
-                            f"Your level is too low for this dungeon (required level: {KaeRPG.dungeons[dungeonstr]['Minlevel']})."
-                        )
-                    embed.add_field(
-                        name=f"Starting a Raid on {dungeonstr}!", value="Raid starting in 5 seconds...", inline=False
-                    )
-                    await ctx.send(embed=embed)
-                    embed.clear_fields()
-                    await asyncio.sleep(5)
                     playerobj = Player(self.bot, playerrecord)
-                    dungeonobj = Dungeon(self.bot, dungeonstr, KaeRPG.dungeons[dungeonstr])
-                    await KaeRPG.battlecontroller(self, ctx, playerobj, dungeonobj)
-
                 else:
-                    await ctx.send(
-                        "You don't have a character to raid this dungeon with! Use 'prefix kaerpg makecharacter'."
-                    )
+                    return await ctx.send("You don't have a character to raid this dungeon with! Use 'prefix kaerpg makecharacter'.")
+
+                dungeonobj = next((x for x in KaeRPG.dungeons if x.name == dungeonstr), None)
+                if not dungeonobj:
+                    return await ctx.send("That is not a KaeRPG dungeon. Type 'prefix kr dungeonlist' to find dungeons.")
+
+                if dungeonobj.level > playerobj.level:
+                    return await ctx.send(f"Your level is too low for this dungeon (required level: {dungeonobj.level}).")
+
+                embed.add_field(name=f"Starting a Raid on {dungeonstr}!", value="Raid starting in 5 seconds...", inline=False)
+                await ctx.send(embed=embed)
+                embed.clear_fields()
+                await asyncio.sleep(5)
+
+                await KaeRPG.battlecontroller(self, ctx, playerobj, dungeonobj)
 
 
 def setup(bot):
