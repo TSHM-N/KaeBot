@@ -30,12 +30,10 @@ class Player(Character):
 
     async def damagecalc(self, enemyresistance: int):
         characterstats = self.stats
-        equippedobj = next((weapon for weapon in KaeRPG.weapons if weapon.name == self.equipped["weapon"]))
-        weapondamage = equippedobj.damage
-        weaponscaling = equippedobj.scaling
+        weaponobj = await KaeRPG.getweaponobj(self.equipped["weapon"])
 
         scalingmultiplier = {}
-        for key, val in weaponscaling.items():
+        for key, val in weaponobj.scaling.items():
             if val == "A":
                 scalingmultiplier[key] = 0.10
             elif val == "B":
@@ -54,9 +52,9 @@ class Player(Character):
             rawdamageboost += val * int(characterstats[key])
 
         critboost = 1.5 if random.random() > 0.95 else 1
-        fluctuation = random.uniform(weapondamage + rawdamageboost * -0.25, weapondamage + rawdamageboost * 0.25)
+        fluctuation = random.uniform(weaponobj.damage + rawdamageboost * -0.25, weaponobj.damage + rawdamageboost * 0.25)
         finaldamage = round(
-            ((weapondamage + rawdamageboost) * (rawdamageboost * 0.1) * critboost + fluctuation) - enemyresistance, 2
+            ((weaponobj.damage + rawdamageboost) * (rawdamageboost * 0.1) * critboost + fluctuation) - enemyresistance, 2
         )
         return finaldamage if finaldamage >= 0 else 0
 
@@ -76,6 +74,10 @@ class Player(Character):
                     str(ctx.author.id),
                 )
         await ctx.send(f"You levelled up! You are now level {currentlevel + 1}.")
+
+# IMPORTANT NOTE: NONE OF THE BELOW TYPES SHOULD BE CREATED MANUALLY!!!
+# THEY ARE ALL GENERATED ON STARTUP AND CATEGORISED INTO KAERPG CLASS ATTRIBUTES
+# USE KaeRPG.getitemobj() / KaeRPG.getenemyobj() / KaeRPG.getdungeonobj()
 
 
 class Enemy(Character):
@@ -171,6 +173,31 @@ class KaeRPG:
             enemies.append(Enemy(enemy, _rawitems["Enemies"][enemy]))
 
     @staticmethod
+    async def getitemobj(itemname: str):
+        return next((x for x in KaeRPG.items if x.name == itemname), None)
+
+    # these are for the sake of specifity
+
+    @staticmethod
+    async def getweaponobj(itemname: str):
+        return next((x for x in KaeRPG.weapons if x.name == itemname), None)
+
+    @staticmethod
+    async def getarmourobj(itemname: str):
+        return next((x for x in KaeRPG.armour if x.name == itemname), None)
+
+    @staticmethod
+    async def getconsumableobj(itemname: str):
+        return next((x for x in KaeRPG.consumables if x.name == itemname), None)
+
+    @staticmethod
+    async def getenemyobj(enemyname: str):
+        return next((x for x in KaeRPG.enemies if x.name == enemyname), None)
+
+    @staticmethod
+    async def getdungeonobj(dungeonname: str):
+        return next((x for x in KaeRPG.dungeons if x.name == dungeonname), None)
+
     async def battlecontroller(self, ctx, player: Player, dungeon: Dungeon):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
@@ -178,8 +205,7 @@ class KaeRPG:
         actions = ["strike", "guard", "flee", "item"]
 
         for enemyindex in range(1, dungeon.enemycount + 1):
-            enemyname = random.choice(dungeon.enemies)
-            enemy = next(e for e in KaeRPG.enemies if e.name == enemyname)
+            enemy = await KaeRPG.getenemyobj(random.choice(dungeon.enemies))
             embed.add_field(name=f"Enemy {enemyindex} of {dungeon.name}:", value=f"{enemy.name}", inline=False)
 
             # codes: 0: pass, 1: break (player win), -1: return (player fail)
@@ -208,7 +234,7 @@ class KaeRPG:
                     pass
 
             async def enemyturn():  # should only ever return 0 or -1
-                turndamagetaken = await enemy.damagecalc(player.equipped)
+                turndamagetaken = await enemy.damagecalc((await KaeRPG.getitemobj(player.equipped["armour"])).protection)
                 player.hp -= turndamagetaken
                 round(player.hp, 2)
                 if player.hp <= 0:
@@ -383,7 +409,7 @@ class KaeRPG:
 
                     startweapons = ""
                     for weapon in ["Lumberer's Axe", "Makeshift Shiv", "Hunter's Bow", "Tattered Scroll"]:
-                        weaponobj = next((x for x in KaeRPG.weapons if x.name == weapon), None)
+                        weaponobj = await KaeRPG.getitemobj(weapon)
                         startweapons += f"{weaponobj.name}:\n"
                         startweapons += f"Rank: {weaponobj.rank}\n"
                         startweapons += f"Damage: {weaponobj.damage}\n"
@@ -413,7 +439,7 @@ class KaeRPG:
 
                     startarmour = ""
                     for armour in ["Leather Carapace", "Warrior's Mail", "Rusted Paladin's Armour"]:
-                        armourobj = next((x for x in KaeRPG.armour if x.name == armour), None)
+                        armourobj = await KaeRPG.getitemobj(armour)
                         startarmour += f"{armourobj.name}:\n"
                         startarmour += f"Rank: {armourobj.rank}\n"
                         startarmour += f"Protection: {armourobj.protection}\n"
@@ -501,7 +527,7 @@ class KaeRPG:
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
         embed.set_author(name=f"KaeRPG: Info for '{item}'", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
 
-        itemobj = next((x for x in KaeRPG.items if x.name == item), None)
+        itemobj = await KaeRPG.getitemobj(item)
         if itemobj:  # If in item list:
             attributes = list(filter(lambda x: not x.startswith("_") and not x == "name", dir(itemobj)))
             for attr in attributes:
@@ -660,12 +686,10 @@ class KaeRPG:
         if player:
             player = Player(self.bot, player)
 
-            if toequip in next(x for x in KaeRPG.weapons if x.name == toequip).name:
+            if await KaeRPG.getweaponobj(toequip):
                 player.equipped["weapon"] = toequip
-                itemtype = "weapon"
-            elif toequip in next(x for x in KaeRPG.armour if x.name == toequip).name:
+            elif await KaeRPG.getarmourobj(toequip):
                 player.equipped["armour"] = toequip
-                itemtype = "armour"
             else:
                 return await ctx.send("That is not a valid, equippable item. Are you sure it is in your inventory?")
 
@@ -697,7 +721,7 @@ class KaeRPG:
                 else:
                     return await ctx.send("You don't have a character to raid this dungeon with! Use 'prefix kaerpg makecharacter'.")
 
-                dungeonobj = next((x for x in KaeRPG.dungeons if x.name == dungeonstr), None)
+                dungeonobj = await KaeRPG.getdungeonobj(dungeonstr)
                 if not dungeonobj:
                     return await ctx.send("That is not a KaeRPG dungeon. Type 'prefix kr dungeonlist' to find dungeons.")
 
