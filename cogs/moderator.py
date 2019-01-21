@@ -48,12 +48,11 @@ class Moderator:
         description="Unbans a specified user through their ID. Only usable by users with the Ban Members"
         " permission.",
     )
-    async def unban(self, ctx, user: int):
-        print(f"Attempted ban by {ctx.message.author}. Target: {user}")
+    async def unban(self, ctx, user: discord.User):
+        print(f"Attempted unban by {ctx.message.author}. Target: {user}")
         if ctx.message.author.guild_permissions.ban_members:
-            true_user = self.bot.get_user(user)
-            await ctx.message.guild.unban(true_user)
-            await ctx.send(f"{true_user} unbanned.")
+            await ctx.message.guild.unban(user)
+            await ctx.send(f"{user} unbanned.")
             print("Unban successful.")
         else:
             await ctx.send("You lack the following permissions to do this:\n```css\nBan Members\n```")
