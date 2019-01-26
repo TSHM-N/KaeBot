@@ -12,6 +12,10 @@ class Character(ABC):
     async def damagecalc(self, resistance: int):
         pass
 
+    @abstractmethod
+    async def experienceyield(self):
+        pass
+
 
 class Player(Character):
     def __init__(self, bot, playerrecord: asyncpg.Record):
@@ -58,8 +62,11 @@ class Player(Character):
         )
         return finaldamage if finaldamage >= 0 else 0
 
+    async def experienceyield(self):
+        return sum([int(x) for x in self.stats.values()]) // 3
+
     @staticmethod
-    async def calcrequiredexp(self, threshold):  # threshold is typically current level + 1
+    async def calculaterequiredexp(threshold):  # threshold is typically current level + 1
         return math.log(1.2, threshold) + threshold + 7
 
     async def levelup(self, ctx):
@@ -72,7 +79,7 @@ class Player(Character):
                     "UPDATE kaerpg_characterinfo SET level = $1 WHERE user_id = $2",
                     currentlevel + 1,
                     str(ctx.author.id),
-                )
+                    )
         await ctx.send(f"You levelled up! You are now level {currentlevel + 1}.")
 
 # IMPORTANT NOTE: NONE OF THE BELOW TYPES SHOULD BE CREATED MANUALLY!!!
@@ -95,6 +102,9 @@ class Enemy(Character):
             self.damage + random.uniform(self.damage * 0.2, self.damage * 0.5) - playerprotection / 3, 2
         )
         return finaldamage if finaldamage >= 0 else 0
+
+    async def experienceyield(self):
+        return self.hp + self.resistance + self.damage // 3
 
 
 class Dungeon:
@@ -228,7 +238,6 @@ class KaeRPG:
                 elif action == "guard":
                     pass
                 elif action == "flee":
-                    await ctx.send("You fled the dungeon like a coward.")
                     return -1
                 elif action == "item":
                     pass
@@ -264,8 +273,8 @@ class KaeRPG:
                 action = await self.bot.wait_for(
                     "message",
                     check=lambda m: m.author == ctx.author
-                    and m.channel == ctx.channel
-                    and m.content.lower() in actions,
+                                    and m.channel == ctx.channel
+                                    and m.content.lower() in actions,
                 )
                 action = action.content.lower()
                 assert action in actions
@@ -303,7 +312,7 @@ class KaeRPG:
                     elif state == 1:  # break (next pass)
                         break
                     elif state == -1:  # fail (return)
-                        return
+                        return await ctx.send("You fled the dungeon like a coward.")
                     else:
                         raise NotImplementedError(f"Illegal state {state} (should be 0, 1 or -1)")
                 turn += 1
@@ -340,13 +349,13 @@ class KaeRPG:
         embed.add_field(
             name="Beginner's Guide to KaeRPG",
             value="To start playing, create a character using 'prefix kaerpg makecharacter'.\n"
-            "Once you have a character, you can access information related to your character using"
-            " 'prefix kaerpg characterinfo'. This includes your character name, level, experience and "
-            "inventory.\nTo access a dungeon and fight enemies for loot, type 'prefix kaerpg dungeonlist'"
-            " to list dungeons and type 'prefix kaerpg raid dungeonname' to raid that dungeon.\n"
-            "For more information, type 'prefix kaerpg info' and then type 'prefix kaerpg info topic'"
-            " to learn about a specific topic.\n"
-            "For a list of other commands, type 'prefix kaerpg'.",
+                  "Once you have a character, you can access information related to your character using"
+                  " 'prefix kaerpg characterinfo'. This includes your character name, level, experience and "
+                  "inventory.\nTo access a dungeon and fight enemies for loot, type 'prefix kaerpg dungeonlist'"
+                  " to list dungeons and type 'prefix kaerpg raid dungeonname' to raid that dungeon.\n"
+                  "For more information, type 'prefix kaerpg info' and then type 'prefix kaerpg info topic'"
+                  " to learn about a specific topic.\n"
+                  "For a list of other commands, type 'prefix kaerpg'.",
             inline=False,
         )
         await ctx.send(embed=embed)
@@ -573,7 +582,7 @@ class KaeRPG:
         name="characterinfo",
         brief="Get the character info of a user's character. Aliased to inventory.",
         description="Get character info of your or someone else's character. If a user is not"
-        " specified, this command defaults to your character. Aliased to inventory.",
+                    " specified, this command defaults to your character. Aliased to inventory.",
         aliases=["inventory"],
     )
     async def characterinfo(self, ctx, user: commands.MemberConverter = None):
