@@ -1,7 +1,6 @@
 # Alpha milestones
 All complete!
 # Beta milestones
-TODO: Rewrite seasonal commands to use display_name
 TODO: Add cooldowns for problematic commands (example: 'lyrics', has the potential to spam channels)
 TODO: Add more moderation features (with customisability) such as autorole, stickyrole and antispam
 TODO: Implement decorators for better control over commands (commands.bot_has_permissions(), commands.has_permissions())
