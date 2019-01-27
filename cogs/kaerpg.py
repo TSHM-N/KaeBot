@@ -538,6 +538,7 @@ class KaeRPG:
 
         itemobj = await KaeRPG.getitemobj(item)
         if itemobj:  # If in item list:
+            # sort and strip internal attributes and 'name' attribute
             attributes = list(filter(lambda x: not x.startswith("_") and not x == "name", dir(itemobj)))
             for attr in attributes:
                 content = getattr(itemobj, attr)
