@@ -10,6 +10,7 @@ TODO: Cram as many commands as I can into this thing
 TODO: Get rid of the god-awful restarthax python file and integrate another solution to restart the bot
 TODO: Create a better looking help command
 TODO: Use reaction buttons more often
+TODO: Finish NSFW commands
 # Post release milestones
 TODO: Re-implement voice using lavalink & aqualink wrapper
 TODO: Implement image manipulation cog
