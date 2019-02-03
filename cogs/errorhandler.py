@@ -20,10 +20,10 @@ class ErrorHandler:
         if hasattr(ctx.command, "on_error"):
             return
 
-        if isinstance(error, commands.CheckFailure):
+        elif isinstance(error, commands.CheckFailure):
             return
 
-        if isinstance(error, commands.CommandNotFound):
+        elif isinstance(error, commands.CommandNotFound):
             try:
                 invalidcommand = re.findall(r"\"([^\"]*)\"", error.args[0])[0]
             except IndexError:
@@ -41,7 +41,7 @@ class ErrorHandler:
 
             embed.add_field(name="Invalid command. Did you mean:", value=similarstr, inline=False)
 
-        if isinstance(error, commands.MissingRequiredArgument):
+        elif isinstance(error, commands.MissingRequiredArgument):
             embedstr = f"{error.param.name} (of type {str(error.param).split(': ')[1]})."  # hacky way to get arg type
             embed.add_field(name="Missing required argument:", value=embedstr, inline=False)
 
