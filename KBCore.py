@@ -46,12 +46,7 @@ async def on_ready():
         bot.TRAVITIAKEY = data["travitiakey"]
         bot.SAUCENAOKEY = data["saucenaokey"]
     bot.credentials = {"user": bot.PSQLUSER, "password": bot.PSQLPASS, "database": "kaebot", "host": "127.0.0.1"}
-    bot.strcommands = []
-    for command in bot.commands:
-        bot.strcommands.append(str(command))
-
     print(f"{bot.KAEBOT_VERSION} up and running. Running on {len(bot.guilds)} guilds.")
-    print("Initialised strcommands.")
     bot.kaedb = await asyncpg.create_pool(**bot.credentials, max_inactive_connection_lifetime=5, init=poolinit)
     print(f"Connection to database established: {bot.kaedb}")
 
@@ -89,7 +84,7 @@ async def on_guild_remove(guild):
         async with conn.transaction():
             conn.execute("DELETE FROM server_prefixes WHERE server_id = $1", guild.id)
 
-
+bot.remove_command("help")
 cogs = []
 for file in os.listdir("cogs"):
     if file.endswith(".py"):
