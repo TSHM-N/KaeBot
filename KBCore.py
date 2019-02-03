@@ -82,7 +82,7 @@ async def on_guild_join(guild):
 async def on_guild_remove(guild):
     async with bot.kaedb.acquire() as conn:
         async with conn.transaction():
-            conn.execute("DELETE FROM server_prefixes WHERE server_id = $1", guild.id)
+            await conn.execute("DELETE FROM server_prefixes WHERE server_id = $1", guild.id)
 
 bot.remove_command("help")
 cogs = []
