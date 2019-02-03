@@ -29,7 +29,7 @@ class ErrorHandler:
             except IndexError:
                 invalidcommand = None
             similar = difflib.get_close_matches(
-                invalidcommand, self.bot.strcommands, n=5, cutoff=0.6
+                invalidcommand, [x.name for x in self.bot.commands], n=5, cutoff=0.6
             )  # Get similar words
 
             similarstr = ""
@@ -40,6 +40,10 @@ class ErrorHandler:
                     similarstr += f"{simstr}\n"
 
             embed.add_field(name="Invalid command. Did you mean:", value=similarstr, inline=False)
+
+        if isinstance(error, commands.MissingRequiredArgument):
+            embedstr = f"{error.param.name} (of type {str(error.param).split(': ')[1]})."  # hacky way to get arg type
+            embed.add_field(name="Missing required argument:", value=embedstr, inline=False)
 
         else:
             embed.add_field(name="An unhandled exception occurred.", value=str(error), inline=False)
