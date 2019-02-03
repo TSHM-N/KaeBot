@@ -17,7 +17,7 @@ class Travitia:
         await ctx.send("You started chatting with KaeBot! Type `.close.` to stop chatting.")
         while True:
             message = await self.bot.wait_for(
-                "message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel
+                "message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel, timeout=30
             )
 
             if not 3 <= len(message.content) <= 60:
