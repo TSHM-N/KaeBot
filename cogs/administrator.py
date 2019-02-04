@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-import asyncio
+import asyncio, sys
+import kaeutils.checks
 
 
 class Administrator:
@@ -35,40 +36,36 @@ class Administrator:
         brief="Add a prefix to the server. Enclose prefix in ' '.",
         description="Add a server-specific prefix to Kaeself.bot.\n Enclose prefix in ' '.",
     )
+    @kaeutils.checks.ctx_admin_or_botowner()
     async def add(self, ctx, *, newprefix: str):
-        if ctx.author.guild_permissions.administrator:
-            if newprefix.startswith("'") and newprefix.endswith("'"):
-                newprefix = newprefix[1:-1]
-                async with self.bot.kaedb.acquire() as conn:
-                    async with conn.transaction():
-                        await conn.execute("INSERT INTO server_prefixes VALUES ($1, $2)", str(ctx.guild.id), newprefix)
-                await ctx.send(f"Added '{newprefix}' as a prefix.")
-            else:
-                await ctx.send("Bad input! Make sure you enclose your new prefix in single quotes like so: `'kae '`.")
+        if newprefix.startswith("'") and newprefix.endswith("'"):
+            newprefix = newprefix[1:-1]
+            async with self.bot.kaedb.acquire() as conn:
+                async with conn.transaction():
+                    await conn.execute("INSERT INTO server_prefixes VALUES ($1, $2)", str(ctx.guild.id), newprefix)
+            await ctx.send(f"Added '{newprefix}' as a prefix.")
         else:
-            await ctx.send("You lack the following permissions to do this:\n```css\nAdministrator\n```")
+            await ctx.send("Bad input! Make sure you enclose your new prefix in single quotes like so: `'kae '`.")
 
     @prefix.command(
         name="remove",
         brief="Remove a prefix from the server.",
-        description="Remove a server-specific prefix from Kaeself.bot.",
+        description="Remove a server-specific prefix from Kaebot.",
     )
+    @kaeutils.checks.ctx_admin_or_botowner()
     async def remove(self, ctx, *, todelete):
-        if ctx.author.guild_permissions.administrator:
-            if todelete.startswith("'") and todelete.endswith("'"):
-                todelete = todelete[1:-1]
-                async with self.bot.kaedb.acquire() as conn:
-                    async with conn.transaction():
-                        await conn.execute(
-                            "DELETE FROM server_prefixes WHERE server_id = $1 AND prefix = $2",
-                            str(ctx.guild.id),
-                            todelete,
-                        )
-                await ctx.send(f"Deleted the '{todelete}' prefix.")
-            else:
-                await ctx.send("Bad input! Make sure you enclose the prefix in single quotes like so: `'kae '`.")
+        if todelete.startswith("'") and todelete.endswith("'"):
+            todelete = todelete[1:-1]
+            async with self.bot.kaedb.acquire() as conn:
+                async with conn.transaction():
+                    await conn.execute(
+                        "DELETE FROM server_prefixes WHERE server_id = $1 AND prefix = $2",
+                        str(ctx.guild.id),
+                        todelete,
+                    )
+            await ctx.send(f"Deleted the '{todelete}' prefix.")
         else:
-            await ctx.send("You lack the following permissions to do this:\n```css\nAdministrator\n```")
+            await ctx.send("Bad input! Make sure you enclose the prefix in single quotes like so: `'kae '`.")
 
     @commands.command(
         name="prune",
