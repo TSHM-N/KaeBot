@@ -8,11 +8,12 @@ class Seasonal:
         self.bot = bot
 
     @commands.command(
-        name="spooky",
+        name="halloween",
         brief="Adds some spook to your nickname.",
         description="Adds a pumpkin to your nickname. Only usable during October!",
+        aliases=["spooky"]
     )
-    async def spooky(self, ctx):
+    async def halloween(self, ctx):
         if datetime.datetime.today().month == 10:
             if ctx.message.author.display_name.endswith("\U0001f383"):
                 await ctx.send("Your nickname is already spooky!")
