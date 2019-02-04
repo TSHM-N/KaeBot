@@ -37,6 +37,21 @@ class Seasonal:
         else:
             await ctx.send("You can't use this yet...")
 
+    @commands.command(
+        name="valentine",
+        brief="Adds some romance to your nickname.",
+        description="Adds a rose to your nickname. Only usable during February!",
+    )
+    async def valentine(self, ctx):
+        if datetime.datetime.today().month == 2:
+            if ctx.message.author.display_name.endswith("\U0001f339"):
+                await ctx.send("Your nickname is already romantic!")
+            else:
+                await ctx.message.author.edit(nick=ctx.message.author.display_name + " \U0001f339")
+                await ctx.send(f"Your nickname is now '{ctx.author.display_name}'.")
+        else:
+            await ctx.send("You can't use this yet...")
+
 
 def setup(bot):
     bot.add_cog(Seasonal(bot))
