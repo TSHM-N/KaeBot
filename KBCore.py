@@ -45,6 +45,7 @@ async def on_ready():
         bot.PSQLPASS = data["psqlpass"]
         bot.TRAVITIAKEY = data["travitiakey"]
         bot.SAUCENAOKEY = data["saucenaokey"]
+        bot.TRNKEY = data["trnkey"]
     bot.credentials = {"user": bot.PSQLUSER, "password": bot.PSQLPASS, "database": "kaebot", "host": "127.0.0.1"}
     print(f"{bot.KAEBOT_VERSION} up and running. Running on {len(bot.guilds)} guilds.")
     bot.kaedb = await asyncpg.create_pool(**bot.credentials, max_inactive_connection_lifetime=5, init=poolinit)
