@@ -140,6 +140,8 @@ class Fun:
     async def duel(self, ctx, dueller: discord.Member):
         if dueller == ctx.author:
             return await ctx.send("You can't duel yourself!")
+        if dueller.bot:
+            return await ctx.send("You can't duel a bot!")
 
         await ctx.send(f"{ctx.author.mention} challenges {dueller.mention} to a duel! {dueller.mention}, type "
                        f"'.ready.' within 20 seconds to start the duel.")
