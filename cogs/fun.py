@@ -71,7 +71,7 @@ class Fun:
     async def lovecalculator(self, ctx, user1: discord.Member, user2: discord.Member):
         if user1 == user2:
             return await ctx.send("You can't calculate love between the same person.")
-        shipname = (user1.name[: len(user1.name) // 2] + user2.name[len(user2.name) // 2 :]).capitalize()
+        shipname = (user1.name[: len(user1.name) // 2] + user2.name[len(user2.name) // 2:]).capitalize()
         user1raw = 0
         for char in list(user1.name):
             user1raw += ord(char)
@@ -131,6 +131,34 @@ class Fun:
                     await ctx.send("You survived Ban Roulette! Nice job.")
         else:
             await ctx.send("That's not an appropriate number of bullets.")
+
+    @commands.group(
+        name="duel",
+        brief="Challenge someone to a duel!",
+        description="Challenge someone to a test of reaction speeds!"
+    )
+    async def duel(self, ctx, dueller: discord.Member):
+        if dueller == ctx.author:
+            return await ctx.send("You can't duel yourself!")
+
+        await ctx.send(f"{ctx.author.mention} challenges {dueller.mention} to a duel! {dueller.mention}, type "
+                       f"'.ready.' within 20 seconds to start the duel.")
+        try:
+            message = await self.bot.wait_for(
+                "message", check=lambda m: m.author == dueller and m.channel == ctx.channel,
+                timeout=20
+            )
+        except asyncio.TimeoutError:
+            return await ctx.send("Duel cancelled: opponent failed to respond.")
+
+        await ctx.send("The duel will start after 10 seconds: when I say 'Go!', send an emoji of a gun!")
+        await asyncio.sleep(10 + random.randint(0, 8))
+        await ctx.send("Go!")
+        message = await self.bot.wait_for(
+            "message",
+            check=lambda m: (m.author == dueller or m.author == ctx.author) and m.channel == ctx.channel and m.content == "\U0001f52b"
+        )
+        await ctx.send(f"{message.author.mention} was first! They win the duel!")
 
 
 def setup(bot):
