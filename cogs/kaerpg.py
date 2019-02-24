@@ -63,11 +63,11 @@ class Player(Character):
         return finaldamage if finaldamage >= 0 else 0
 
     async def experienceyield(self):
-        return sum([int(x) for x in self.stats.values()]) // 3
+        return sum([int(x) for x in self.stats.values()]) // 1.5
 
     @staticmethod
     async def calculaterequiredexp(threshold):  # threshold is typically current level + 1
-        return math.log(1.2, threshold) + threshold + 7
+        return (4 * (threshold ** 3)) / 5
 
     async def levelup(self, ctx):
         async with self.bot.kaedb.acquire() as conn:
@@ -104,7 +104,7 @@ class Enemy(Character):
         return finaldamage if finaldamage >= 0 else 0
 
     async def experienceyield(self):
-        return self.hp + self.resistance + self.damage // 3
+        return self.hp + self.resistance + self.damage // 1.5
 
 
 class Dungeon:
@@ -146,7 +146,7 @@ class Consumable(Item):
         self.info = itemdict["Info"]
 
 
-class KaeRPG:
+class KaeRPG(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -211,7 +211,7 @@ class KaeRPG:
     async def battlecontroller(self, ctx, player: Player, dungeon: Dungeon):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name="KaeRPG", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
         actions = ["strike", "guard", "flee", "item"]
 
         for enemyindex in range(1, dungeon.enemycount + 1):
@@ -316,8 +316,7 @@ class KaeRPG:
                     else:
                         raise NotImplementedError(f"Illegal state {state} (should be 0, 1 or -1)")
                 turn += 1
-            rawexp = round((enemy.maxhp + enemy.damage + enemy.resistance) * (1/3))
-            gainedexp = rawexp + round(random.uniform(rawexp * -0.25, rawexp * 0.25))
+            gainedexp = await enemy.experienceyield()
             await ctx.send(f"\U00002747You earned {gainedexp}XP from killing {enemy.name}.")
 
     @commands.group(
@@ -330,7 +329,7 @@ class KaeRPG:
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
             embed.set_footer(text=self.bot.KAEBOT_VERSION)
-            embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+            embed.set_author(name="KaeRPG", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
             embedcontent = ""
             for command in KaeRPG.kaerpg.commands:
                 embedcontent += f"{command}\n"
@@ -345,7 +344,7 @@ class KaeRPG:
     async def beginnersguide(self, ctx):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name="KaeRPG", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
         embed.add_field(
             name="Beginner's Guide to KaeRPG",
             value="To start playing, create a character using 'prefix kaerpg makecharacter'.\n"
@@ -371,7 +370,7 @@ class KaeRPG:
                 else:
                     embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
                     embed.set_footer(text=self.bot.KAEBOT_VERSION)
-                    embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+                    embed.set_author(name="KaeRPG", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
 
                     await ctx.send(
                         "Entered character creation!\n"
@@ -534,7 +533,7 @@ class KaeRPG:
     async def iteminfo(self, ctx, *, item: str):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name=f"KaeRPG: Info for '{item}'", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name=f"KaeRPG: Info for '{item}'", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
 
         itemobj = await KaeRPG.getitemobj(item)
         if itemobj:  # If in item list:
@@ -567,7 +566,7 @@ class KaeRPG:
     async def characterlist(self, ctx):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name="KaeRPG", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
 
         async with self.bot.kaedb.acquire() as conn:
             async with conn.transaction():
@@ -589,7 +588,7 @@ class KaeRPG:
     async def characterinfo(self, ctx, user: commands.MemberConverter = None):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name="KaeRPG", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
         if user is None:
             user = ctx.author
         embed.set_thumbnail(url=user.avatar_url)
@@ -630,7 +629,7 @@ class KaeRPG:
     async def dungeonlist(self, ctx):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name="KaeRPG", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
         embedcontent = ""
         for dungeon in KaeRPG.dungeons:
             embedcontent += f"{dungeon.name} (minimum level: {dungeon.level}, number of enemies:"
@@ -646,7 +645,7 @@ class KaeRPG:
     async def weaponlist(self, ctx):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name="KaeRPG", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
 
         embedcontent = dict.fromkeys(["Omega", "Beta", "Alpha", "S", "A", "B", "C", "D"], "")
         for item in KaeRPG.weapons:
@@ -670,7 +669,7 @@ class KaeRPG:
     async def armourlist(self, ctx):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name="KaeRPG", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
 
         embedcontent = dict.fromkeys(["Omega", "Beta", "Alpha", "S", "A", "B", "C", "D"], "")
         for item in KaeRPG.armour:
@@ -719,7 +718,7 @@ class KaeRPG:
     async def raid(self, ctx, *, dungeonstr: str):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name="KaeRPG", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name="KaeRPG", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
 
         async with self.bot.kaedb.acquire() as conn:
             async with conn.transaction():

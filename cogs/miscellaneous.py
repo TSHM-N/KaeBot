@@ -3,7 +3,7 @@ from discord.ext import commands
 import random, asyncio
 
 
-class Miscellaneous:
+class Miscellaneous(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -31,7 +31,7 @@ class Miscellaneous:
     )
     async def getinvite(self, ctx):
         embed = discord.Embed(title="Invite KaeBot to your server!", colour=discord.Color.from_rgb(81, 0, 124))
-        embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_thumbnail(url="https://i.ibb.co/dBVGPwC/Icon.png")
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
         embed.add_field(
             name="Non-admin invite link",

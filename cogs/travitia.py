@@ -3,7 +3,7 @@ from discord.ext import commands
 import aiohttp
 
 
-class Travitia:
+class Travitia(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

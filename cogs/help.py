@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 
-class Help:
+class Help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -15,13 +15,13 @@ class Help:
     async def help(self, ctx, *, command=None):
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_author(name="KaeBot Help", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_author(name="KaeBot Help", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
 
         if command is None or self.bot.get_command(command) is None:
             for cog in self.bot.cogs:
                 embedstr = ""
-                if self.bot.get_cog_commands(cog):  # Make sure commandless cogs aren't included
-                    for com in self.bot.get_cog_commands(cog):
+                if self.bot.cogs[cog].get_commands():  # Make sure commandless cogs aren't included
+                    for com in self.bot.cogs[cog].get_commands():
                         if com.hidden:
                             continue
 
@@ -54,8 +54,22 @@ class Help:
 
             embed.add_field(name=f"Help for command '__{command.name}__'", value=embedstr, inline=False)
 
-        await ctx.send(embed=embed)
+        if self.bot.pm_help:
+            try:
+                await ctx.author.send(embed=embed)
+            except discord.errors.Forbidden:
+                embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
+                embed.set_footer(text=self.bot.KAEBOT_VERSION)
+                embed.set_author(name="KaeBot Help", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
+                embed.set_thumbnail(url="https://i.ibb.co/dBVGPwC/Icon.png")
+                embed.add_field(name="Fatal Error:",
+                                value="Unable to DM user.\nTry enabling DMs from server members and then using `help` "
+                                      "again.")
+                await ctx.send(embed=embed)
+        else:
+            await ctx.send(embed=embed)
 
 
 def setup(bot):
+    bot.remove_command("help")
     bot.add_cog(Help(bot))

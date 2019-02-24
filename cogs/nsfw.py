@@ -3,7 +3,7 @@ from discord.ext import commands
 import aiohttp, json, random, xmltodict
 
 
-class NSFW:
+class NSFW(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -54,7 +54,7 @@ class NSFW:
         if not ctx.invoked_subcommand:
             embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
             embed.set_footer(text=self.bot.KAEBOT_VERSION)
-            embed.set_author(name="KaeBot", icon_url="https://cdn.pbrd.co/images/HGYlRKR.png")
+            embed.set_author(name="KaeBot", icon_url="https://i.ibb.co/dBVGPwC/Icon.png")
 
             subcommands = ""
             for comm in NSFW.nhentai.commands:

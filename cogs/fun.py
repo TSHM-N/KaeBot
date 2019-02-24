@@ -3,7 +3,7 @@ from discord.ext import commands
 import random, asyncio
 
 
-class Fun:
+class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -132,7 +132,7 @@ class Fun:
         else:
             await ctx.send("That's not an appropriate number of bullets.")
 
-    @commands.group(
+    @commands.command(
         name="duel",
         brief="Challenge someone to a duel!",
         description="Challenge someone to a test of reaction speeds!"

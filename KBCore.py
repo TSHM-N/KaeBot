@@ -24,6 +24,7 @@ bot = commands.Bot(
     description=f"Made by TSHMN. Version: KaeBot Beta",
     command_prefix=prefix,
     activity=discord.Streaming(name="TSHMN's bot | Default prefix: kae", url="https://twitch.tv/monky"),
+    pm_help=True
 )
 
 
@@ -64,7 +65,7 @@ async def on_guild_join(guild):
     if guild.system_channel:
         embed = discord.Embed(colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=bot.KAEBOT_VERSION)
-        embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_thumbnail(url="https://i.ibb.co/dBVGPwC/Icon.png")
         embed.add_field(
             name="Hey there, I'm KaeBot!",
             value="Hi! I'm KaeBot, a **discord.py** bot written by TSHMN (and aliases).\n"
@@ -85,7 +86,6 @@ async def on_guild_remove(guild):
         async with conn.transaction():
             await conn.execute("DELETE FROM server_prefixes WHERE server_id = $1", guild.id)
 
-bot.remove_command("help")
 cogs = []
 for file in os.listdir("cogs"):
     if file.endswith(".py"):

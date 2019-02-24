@@ -4,7 +4,7 @@ import asyncio, sys
 import kaeutils.checks
 
 
-class Administrator:
+class Administrator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 

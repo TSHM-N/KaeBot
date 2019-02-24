@@ -3,14 +3,15 @@ from discord.ext import commands
 import re, difflib
 
 
-class ErrorHandler:
+class ErrorHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         embed = discord.Embed(title="Fatal Error:", colour=discord.Color.from_rgb(81, 0, 124))
         embed.set_footer(text=self.bot.KAEBOT_VERSION)
-        embed.set_thumbnail(url="https://cdn.pbrd.co/images/HGYlRKR.png")
+        embed.set_thumbnail(url="https://i.ibb.co/dBVGPwC/Icon.png")
 
         async with self.bot.kaedb.acquire() as conn:
             async with conn.transaction():
