@@ -34,7 +34,7 @@ async def poolinit(con):
 
 @bot.event
 async def on_ready():
-    bot.KAEBOT_VERSION = "KaeBot Beta"
+    bot.KAEBOT_VERSION = "Important notice regarding KaeBot development: kae important"
     with open("resources/kaeinfo.json", "r") as f:
         data = json.load(f)
         bot.TOKEN = TOKEN

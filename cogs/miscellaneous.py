@@ -94,6 +94,24 @@ class Miscellaneous(commands.Cog):
                 seconds -= 1
             await ctx.send("Go!")
 
+    @commands.command(
+        name="important",
+        brief="An important missive regarding KaeBot development.",
+        description="An important missive regarding KaeBot development."
+    )
+    async def important(self, ctx):
+        embed = discord.Embed(title="KaeBot", colour=discord.Color.from_rgb(81, 0, 124))
+        embed.set_thumbnail(url="https://i.ibb.co/dBVGPwC/Icon.png")
+        embed.set_footer(text=self.bot.KAEBOT_VERSION)
+        embed.add_field(
+            name="An important announcement regarding KaeBot development:",
+            value="KaeBot is, as of the time of writing, under indefinite hiatus.\nNo further development will be done"
+            ", no bugs will be fixed and no incomplete features will be implemented until such a time as I see fit to"
+            " resume development, which may be never.\nSo long,\nTSHMN",
+            inline=False,
+        )
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Miscellaneous(bot))
