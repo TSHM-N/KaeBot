@@ -1,3 +1,7 @@
+# Important notice:
+This project has been archived by the repository owner indefinitely. Whether development will eventually be resumed is uncertain.
+Below is an archived record of KaeBot's README.md as it was while KaeBot was in development. Note that some information will no longer be accurate due to this change.
+
 # KaeBot ![](https://img.shields.io/badge/source-open-%2326003f.svg) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 A constantly WIP Discord bot written in discord.py. 
 
